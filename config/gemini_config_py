@@ -1,0 +1,11 @@
+# config/gemini_config.py
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+GEMINI_CONFIG = {
+    'api_key': os.getenv('GEMINI_API_KEY'),
+    'model': 'gemini-pro',
+    'max_tokens': 50
+}
