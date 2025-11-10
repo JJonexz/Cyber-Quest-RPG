@@ -1,9 +1,4 @@
-# ============================================================================
-# ARCHIVO: ui/screens.py
-# DESCRIPCIÓN: Todas las pantallas de la interfaz de usuario. Incluye menú
-#              principal, selección de personaje, gameplay, resultados y ranking.
-# ============================================================================
-
+# ui/screens.py
 import tkinter as tk
 from tkinter import messagebox
 import random
@@ -11,114 +6,146 @@ from config.colors import COLORS
 from models.character import CharacterDatabase
 
 class GameScreens:
-    """Clase que contiene todas las pantallas del juego"""
+    """Clase que contiene todas las pantallas del juego - VERSIÓN CORREGIDA"""
     
     def __init__(self, game_manager):
         self.game = game_manager
     
+    def _lighten_color(self, color, factor=0.2):
+        """Aclara un color hexadecimal"""
+        try:
+            color = color.lstrip('#')
+            rgb = tuple(int(color[i:i+2], 16) for i in (0, 2, 4))
+            light_rgb = tuple(min(255, int(c + (255 - c) * factor)) for c in rgb)
+            return '#{:02x}{:02x}{:02x}'.format(*light_rgb)
+        except:
+            return color
+    
     # ========================================================================
-    # PANTALLA PRINCIPAL
+    # PANTALLA PRINCIPAL MEJORADA
     # ========================================================================
     
-    def show_main_menu(self):
-        """Muestra el menú principal"""
+    def show_enhanced_main_menu(self):
+        """Menú principal mejorado y más atractivo"""
         self.game.clear_screen()
         
-        # Frame principal
+        # Frame principal con fondo mejorado
         main_frame = tk.Frame(self.game.root, bg=COLORS['bg'])
-        main_frame.pack(expand=True, fill='both', padx=20, pady=20)
+        main_frame.pack(expand=True, fill='both')
         
-        # Título
+        # Efecto de título con glow
+        title_container = tk.Frame(main_frame, bg=COLORS['bg'])
+        title_container.pack(pady=40)
+        
         title_label = tk.Label(
-            main_frame,
-            text="CYBER QUEST",
+            title_container,
+            text="⚡ CYBER QUEST ⚡",
             font=self.game.title_font,
             bg=COLORS['bg'],
             fg=COLORS['accent']
         )
-        title_label.pack(pady=20)
+        title_label.pack()
         
         subtitle_label = tk.Label(
-            main_frame,
-            text="Un juego de rol cyberpunk interactivo",
-            font=self.game.normal_font,
-            bg=COLORS['bg'],
-            fg=COLORS['text']
-        )
-        subtitle_label.pack(pady=5)
-        
-        # Créditos
-        credit_label = tk.Label(
-            main_frame,
-            text="Desarrollado por RBSC",
+            title_container,
+            text="UNIVERSO CYBERPUNK INTERACTIVO",
             font=self.game.small_font,
             bg=COLORS['bg'],
             fg=COLORS['text_secondary']
         )
-        credit_label.pack(pady=5)
+        subtitle_label.pack(pady=5)
         
-        # Botones del menú
+        # Panel de personajes preview
+        self._create_character_preview(main_frame)
+        
+        # Botones del menú con mejor diseño
         button_frame = tk.Frame(main_frame, bg=COLORS['bg'])
         button_frame.pack(pady=40)
         
-        btn_new_game = tk.Button(
-            button_frame,
-            text="🎮 NUEVA PARTIDA",
-            font=self.game.header_font,
-            bg=COLORS['primary'],
-            fg=COLORS['text_secondary'],
-            activebackground=COLORS['accent'],
-            command=self.show_character_selection,
-            width=20,
-            height=2,
-            cursor='hand2'
-        )
-        btn_new_game.pack(pady=10)
+        menu_buttons = [
+            ("🎮 NUEVA AVENTURA", self.show_character_selection, COLORS['primary']),
+            ("✨ PERSONALIZAR", self.show_customization_screen, COLORS['accent']),
+            ("🏆 HALL OF FAME", self.show_ranking, '#f1c40f'),
+            ("❓ GUÍA DEL SISTEMA", self.show_help, COLORS['container_bg2']),
+            ("🚪 SALIR DEL SISTEMA", self.game.root.quit, COLORS['secondary'])
+        ]
         
-        btn_ranking = tk.Button(
-            button_frame,
-            text="🏆 RANKING",
-            font=self.game.header_font,
-            bg=COLORS['container_bg2'],
-            fg=COLORS['text_secondary'],
-            activebackground=COLORS['accent'],
-            command=self.show_ranking,
-            width=20,
-            height=2,
-            cursor='hand2'
-        )
-        btn_ranking.pack(pady=10)
+        for text, command, color in menu_buttons:
+            btn = tk.Button(
+                button_frame,
+                text=text,
+                font=self.game.normal_font,
+                bg=color,
+                fg=COLORS['text_secondary'],
+                activebackground=self._lighten_color(color),
+                command=command,
+                width=25,
+                height=2,
+                cursor='hand2',
+                relief='raised',
+                bd=2
+            )
+            btn.pack(pady=8)
+    
+    def _create_character_preview(self, parent):
+        """Crea preview de personajes en el menú principal"""
+        preview_frame = tk.Frame(parent, bg=COLORS['modal'], relief='ridge', bd=2)
+        preview_frame.pack(pady=20, padx=100, fill='x')
         
-        btn_help = tk.Button(
-            button_frame,
-            text="❓ CÓMO JUGAR",
+        preview_label = tk.Label(
+            preview_frame,
+            text="👥 HÉROES DEL CIBERESPACIO",
             font=self.game.header_font,
-            bg=COLORS['container_bg2'],
-            fg=COLORS['text_secondary'],
-            activebackground=COLORS['accent'],
-            command=self.show_help,
-            width=20,
-            height=2,
-            cursor='hand2'
+            bg=COLORS['modal'],
+            fg=COLORS['accent']
         )
-        btn_help.pack(pady=10)
+        preview_label.pack(pady=10)
         
-        btn_exit = tk.Button(
-            button_frame,
-            text="❌ SALIR",
-            font=self.game.header_font,
-            bg=COLORS['secondary'],
-            fg=COLORS['text_secondary'],
-            activebackground='#c0392b',
-            command=self.game.root.quit,
-            width=20,
-            height=2,
-            cursor='hand2'
-        )
-        btn_exit.pack(pady=10)
+        chars_frame = tk.Frame(preview_frame, bg=COLORS['modal'])
+        chars_frame.pack(pady=10, padx=20)
+        
+        characters = [
+            {'icon': '👤', 'name': 'USUARIO', 'desc': 'Supervivencia digital'},
+            {'icon': '💻', 'name': 'HACKER', 'desc': 'Justicia cibernética'},
+            {'icon': '🎭', 'name': 'OPERATIVO', 'desc': 'Operaciones encubiertas'}
+        ]
+        
+        for char in characters:
+            char_frame = tk.Frame(chars_frame, bg=COLORS['container_bg2'], relief='sunken', bd=1)
+            char_frame.pack(side='left', padx=15, pady=10)
+            
+            icon_label = tk.Label(
+                char_frame,
+                text=char['icon'],
+                font=('Arial', 24),
+                bg=COLORS['container_bg2']
+            )
+            icon_label.pack(pady=5)
+            
+            name_label = tk.Label(
+                char_frame,
+                text=char['name'],
+                font=self.game.small_font,
+                bg=COLORS['container_bg2'],
+                fg=COLORS['text']
+            )
+            name_label.pack()
+            
+            desc_label = tk.Label(
+                char_frame,
+                text=char['desc'],
+                font=('Arial', 8),
+                bg=COLORS['container_bg2'],
+                fg=COLORS['text_secondary']
+            )
+            desc_label.pack(pady=2)
+    
+    def show_main_menu(self):
+        """Muestra el menú principal (compatibilidad)"""
+        self.show_enhanced_main_menu()
     
     # ========================================================================
-    # SELECCIÓN DE PERSONAJE
+    # SELECCIÓN DE PERSONAJE (MANTENER EXISTENTE)
     # ========================================================================
     
     def show_character_selection(self):
@@ -161,6 +188,7 @@ class GameScreens:
             width=25
         )
         name_entry.pack(side='left', padx=10)
+        name_entry.focus()
         
         # Frame de personajes
         characters_frame = tk.Frame(main_frame, bg=COLORS['bg'])
@@ -254,12 +282,17 @@ class GameScreens:
         self.game.selected_character = character_type
         self.game.start_game()
     
+    def show_customization_screen(self):
+        """Pantalla de personalización (placeholder)"""
+        messagebox.showinfo("Personalización", "Sistema de personalización en desarrollo")
+        self.show_main_menu()
+    
     # ========================================================================
-    # JUEGO PRINCIPAL
+    # JUEGO PRINCIPAL MEJORADO
     # ========================================================================
     
-    def show_game_screen(self):
-        """Muestra la pantalla de juego"""
+    def show_enhanced_game_screen(self):
+        """Muestra la pantalla de juego mejorada"""
         self.game.clear_screen()
         
         if self.game.current_stage >= len(self.game.current_story['stages']):
@@ -272,40 +305,11 @@ class GameScreens:
         main_frame = tk.Frame(self.game.root, bg=COLORS['bg'])
         main_frame.pack(expand=True, fill='both', padx=20, pady=20)
         
-        # Barra de progreso superior
-        progress_frame = tk.Frame(main_frame, bg=COLORS['header_bg'])
-        progress_frame.pack(fill='x', pady=(0, 20))
+        # Panel superior con información
+        self._create_game_header(main_frame)
         
-        # Información del jugador
-        info_text = f"👤 {self.game.player_name.get()} | 🎭 {self.game.selected_character.title()} | ⏱️ {self.game.get_elapsed_time()}s | ❌ Errores: {self.game.player_errors}"
-        info_label = tk.Label(
-            progress_frame,
-            text=info_text,
-            font=self.game.small_font,
-            bg=COLORS['header_bg'],
-            fg=COLORS['text']
-        )
-        info_label.pack(pady=10)
-        
-        # Barra de progreso visual
-        progress_bar_frame = tk.Frame(progress_frame, bg=COLORS['bg'], height=30)
-        progress_bar_frame.pack(fill='x', padx=20, pady=5)
-        
-        progress_bar = tk.Canvas(progress_bar_frame, height=20, bg=COLORS['modal'], highlightthickness=0)
-        progress_bar.pack(fill='x')
-        
-        # Dibujar barra después de que se renderice
-        self.game.root.update_idletasks()
-        bar_width = progress_bar.winfo_width()
-        if bar_width > 1:
-            fill_width = int((self.game.player_progress / 100) * bar_width)
-            progress_bar.create_rectangle(0, 0, fill_width, 20, fill=COLORS['accent'], outline='')
-            progress_bar.create_text(
-                bar_width // 2, 10,
-                text=f"{self.game.player_progress}%",
-                fill=COLORS['text'],
-                font=self.game.small_font
-            )
+        # Panel de visualización de personajes
+        self.show_character_display_panel(main_frame)
         
         # Área de historia
         story_frame = tk.Frame(main_frame, bg=COLORS['modal'])
@@ -384,36 +388,146 @@ class GameScreens:
                 pady=10
             )
             opt_btn.pack(fill='x')
+    
+    def show_game_screen(self):
+        """Muestra la pantalla de juego (compatibilidad)"""
+        self.show_enhanced_game_screen()
+    
+    def _create_game_header(self, parent):
+        """Crea el encabezado del juego con información del jugador"""
+        header_frame = tk.Frame(parent, bg=COLORS['header_bg'])
+        header_frame.pack(fill='x', pady=(0, 20))
         
-        # Estado de la IA
-        ai_frame = tk.Frame(main_frame, bg=COLORS['header_bg'])
-        ai_frame.pack(fill='x', pady=(10, 0))
-        
-        ai_label = tk.Label(
-            ai_frame,
-            text="🤖 Competidores IA:",
+        # Información del jugador
+        info_text = f"👤 {self.game.player_name.get()} | 🎭 {self.game.selected_character.title()} | ⏱️ {self.game.get_elapsed_time()}s | ❌ Errores: {self.game.player_errors}"
+        info_label = tk.Label(
+            header_frame,
+            text=info_text,
             font=self.game.small_font,
             bg=COLORS['header_bg'],
             fg=COLORS['text']
         )
-        ai_label.pack(pady=5)
+        info_label.pack(pady=10)
         
+        # Barra de progreso visual
+        progress_bar_frame = tk.Frame(header_frame, bg=COLORS['bg'], height=30)
+        progress_bar_frame.pack(fill='x', padx=20, pady=5)
+        
+        progress_bar = tk.Canvas(progress_bar_frame, height=20, bg=COLORS['modal'], highlightthickness=0)
+        progress_bar.pack(fill='x')
+        
+        # Dibujar barra después de que se renderice
+        self.game.root.update_idletasks()
+        bar_width = progress_bar.winfo_width()
+        if bar_width > 1:
+            fill_width = int((self.game.player_progress / 100) * bar_width)
+            progress_bar.create_rectangle(0, 0, fill_width, 20, fill=COLORS['accent'], outline='')
+            progress_bar.create_text(
+                bar_width // 2, 10,
+                text=f"{self.game.player_progress}%",
+                fill=COLORS['text'],
+                font=self.game.small_font
+            )
+    
+    def show_character_display_panel(self, parent):
+        """Panel de visualización de personajes en tiempo real"""
+        display_frame = tk.Frame(parent, bg=COLORS['header_bg'], relief='groove', bd=2)
+        display_frame.pack(fill='x', pady=10, padx=20)
+        
+        title_label = tk.Label(
+            display_frame,
+            text="🎯 ESTADO DE LOS AGENTES",
+            font=self.game.small_font,
+            bg=COLORS['header_bg'],
+            fg=COLORS['accent']
+        )
+        title_label.pack(pady=8)
+        
+        # Mostrar jugador principal
+        player_frame = tk.Frame(display_frame, bg=COLORS['container_bg2'])
+        player_frame.pack(fill='x', padx=30, pady=5)
+        
+        # Obtener apariencia del jugador basada en efectos
+        player_effects = [effect['type'] for effect in self.game.active_effects]
+        player_appearance = self.game.effects_system.get_character_appearance(
+            self.game.selected_character, 
+            player_effects
+        )
+        
+        player_icon = tk.Label(
+            player_frame,
+            text=player_appearance['icon'],
+            font=('Arial', 20),
+            bg=COLORS['container_bg2'],
+            fg=player_appearance['color']
+        )
+        player_icon.pack(side='left', padx=10)
+        
+        player_info = tk.Label(
+            player_frame,
+            text=f"TÚ ({self.game.selected_character.title()}) - {self.game.player_progress}%",
+            font=self.game.small_font,
+            bg=COLORS['container_bg2'],
+            fg=player_appearance['color']
+        )
+        player_info.pack(side='left', padx=10)
+        
+        # Mostrar efectos activos
+        if self.game.active_effects:
+            effects_text = " | ".join([effect['type'] for effect in self.game.active_effects[:2]])
+            effects_label = tk.Label(
+                player_frame,
+                text=f"Efectos: {effects_text}",
+                font=('Arial', 8),
+                bg=COLORS['container_bg2'],
+                fg=COLORS['secondary']
+            )
+            effects_label.pack(side='right', padx=10)
+        
+        # Mostrar IAs
         for ai in self.game.ai_players:
-            ai_info = f"  • {ai.character_type.title()}: {ai.progress}% | Errores: {ai.errors}"
-            ai_info_label = tk.Label(
+            ai_frame = tk.Frame(display_frame, bg=COLORS['modal'])
+            ai_frame.pack(fill='x', padx=40, pady=2)
+            
+            ai_color = '#3498db' if ai.character_type == 'hacker' else '#e74c3c' if ai.character_type == 'cyberdelincuente' else '#00b894'
+            
+            ai_icon = tk.Label(
                 ai_frame,
-                text=ai_info,
+                text=ai.character_type[0].upper(),
+                font=('Arial', 16),
+                bg=COLORS['modal'],
+                fg=ai_color
+            )
+            ai_icon.pack(side='left', padx=10)
+            
+            ai_info = tk.Label(
+                ai_frame,
+                text=f"{ai.character_type.title()} - {ai.progress}%",
                 font=self.game.small_font,
-                bg=COLORS['header_bg'],
+                bg=COLORS['modal'],
                 fg=COLORS['text_secondary']
             )
-            ai_info_label.pack()
+            ai_info.pack(side='left', padx=10)
+            
+            if ai.completed:
+                status_label = tk.Label(
+                    ai_frame,
+                    text="✅ OBJETIVO CUMPLIDO",
+                    font=('Arial', 8, 'bold'),
+                    bg=COLORS['modal'],
+                    fg=COLORS['secondary']
+                )
+                status_label.pack(side='right', padx=10)
     
-    def show_action_result(self, result_text: str, result_color: str, option: dict, success: bool):
-        """Muestra el resultado de una acción"""
+    # ========================================================================
+    # RESULTADOS DE ACCIÓN MEJORADOS
+    # ========================================================================
+    
+    def show_enhanced_action_result(self, result_text: str, result_color: str, option: dict, success: bool, dialog: str = ""):
+        """Muestra el resultado de una acción mejorado"""
         result_window = tk.Toplevel(self.game.root)
         result_window.title("Resultado")
-        result_window.geometry("500x350")
+        result_window.geometry("600x400")
         result_window.configure(bg=COLORS['modal'])
         result_window.transient(self.game.root)
         result_window.grab_set()
@@ -424,7 +538,7 @@ class GameScreens:
         y = (result_window.winfo_screenheight() // 2) - (result_window.winfo_height() // 2)
         result_window.geometry(f"+{x}+{y}")
         
-        # Contenido
+        # Contenido mejorado
         title_label = tk.Label(
             result_window,
             text=result_text,
@@ -434,28 +548,41 @@ class GameScreens:
         )
         title_label.pack(pady=20)
         
+        # Diálogo del personaje
+        if dialog:
+            dialog_label = tk.Label(
+                result_window,
+                text=f'"{dialog}"',
+                font=('Arial', 11, 'italic'),
+                bg=COLORS['modal'],
+                fg=COLORS['text_secondary'],
+                wraplength=500
+            )
+            dialog_label.pack(pady=10)
+        
         action_label = tk.Label(
             result_window,
             text=f"Acción: {option['text']}",
             font=self.game.normal_font,
             bg=COLORS['modal'],
             fg=COLORS['text'],
-            wraplength=450
+            wraplength=500
         )
         action_label.pack(pady=10)
         
+        # Consecuencia contextual
         if success:
             consequence = random.choice([
                 "Has avanzado significativamente en tu objetivo.",
                 "Tu estrategia está funcionando perfectamente.",
                 "Has ganado ventaja sobre tus competidores.",
                 "El sistema no detectó tu presencia.",
-                "Obtuviste información valiosa."
+                "Obtuviste información valiosa para el próximo paso."
             ])
         else:
             consequence = random.choice([
                 "El sistema detectó actividad sospechosa.",
-                "Perdiste tiempo valioso.",
+                "Perdiste tiempo valioso en el intento.",
                 "Tus competidores están ganando terreno.",
                 "Necesitas replanear tu estrategia.",
                 "El riesgo no valió la pena esta vez."
@@ -467,7 +594,7 @@ class GameScreens:
             font=self.game.normal_font,
             bg=COLORS['modal'],
             fg=COLORS['text'],
-            wraplength=450
+            wraplength=500
         )
         consequence_label.pack(pady=15)
         
@@ -494,8 +621,12 @@ class GameScreens:
         )
         continue_btn.pack(pady=20)
     
+    def show_action_result(self, result_text: str, result_color: str, option: dict, success: bool, dialog: str = ""):
+        """Muestra el resultado de una acción (compatibilidad)"""
+        self.show_enhanced_action_result(result_text, result_color, option, success, dialog)
+    
     # ========================================================================
-    # PANTALLA DE RESULTADOS
+    # PANTALLAS EXISTENTES (MANTENER)
     # ========================================================================
     
     def show_results_screen(self, completed: bool, elapsed_time: int, winner: str = None):
@@ -512,10 +643,14 @@ class GameScreens:
         else:
             title_text = "❌ DERROTA"
             title_color = COLORS['secondary']
-            if winner:
+            if winner == "system_failure":
+                message = "Demasiados errores cometidos. El sistema te ha detectado."
+            elif winner == "time_out":
+                message = "No lograste completar el objetivo a tiempo."
+            elif winner:
                 message = f"El {winner.title()} (IA) completó el objetivo primero."
             else:
-                message = "No lograste completar el objetivo a tiempo."
+                message = "No lograste completar el objetivo."
         
         # Título
         title_label = tk.Label(
@@ -621,12 +756,17 @@ class GameScreens:
         )
         btn_menu.pack(side='left', padx=10)
     
+    def show_enhanced_results_screen(self, completed: bool, elapsed_time: int, winner: str = None):
+        """Muestra la pantalla de resultados mejorada (compatibilidad)"""
+        self.show_results_screen(completed, elapsed_time, winner)
+    
     # ========================================================================
-    # PANTALLA DE RANKING
+    # RANKING Y AYUDA (MANTENER EXISTENTE)
     # ========================================================================
     
     def show_ranking(self):
         """Muestra el ranking de jugadores"""
+        # ... (mantener el código existente de show_ranking) ...
         self.game.clear_screen()
         
         main_frame = tk.Frame(self.game.root, bg=COLORS['bg'])
@@ -712,12 +852,9 @@ class GameScreens:
         )
         back_btn.pack(pady=20)
     
-    # ========================================================================
-    # PANTALLA DE AYUDA
-    # ========================================================================
-    
     def show_help(self):
         """Muestra la pantalla de ayuda"""
+        # ... (mantener el código existente de show_help) ...
         self.game.clear_screen()
         
         main_frame = tk.Frame(self.game.root, bg=COLORS['bg'])
@@ -822,195 +959,3 @@ class GameScreens:
             width=15
         )
         back_btn.pack(pady=20)
-        # ui/screens.py (secciones mejoradas)
-
-class GameScreens:
-    # ... código existente ...
-    
-    def show_enhanced_main_menu(self):
-        """Menú principal mejorado y más atractivo"""
-        self.game.clear_screen()
-        
-        # Frame principal con fondo mejorado
-        main_frame = tk.Frame(self.game.root, bg=COLORS['bg'])
-        main_frame.pack(expand=True, fill='both')
-        
-        # Efecto de título con glow
-        title_container = tk.Frame(main_frame, bg=COLORS['bg'])
-        title_container.pack(pady=40)
-        
-        title_label = tk.Label(
-            title_container,
-            text="⚡ CYBER QUEST ⚡",
-            font=self.game.title_font,
-            bg=COLORS['bg'],
-            fg=COLORS['accent']
-        )
-        title_label.pack()
-        
-        subtitle_label = tk.Label(
-            title_container,
-            text="UNIVERSO CYBERPUNK INTERACTIVO",
-            font=self.game.small_font,
-            bg=COLORS['bg'],
-            fg=COLORS['text_secondary']
-        )
-        subtitle_label.pack(pady=5)
-        
-        # Panel de personajes preview
-        self._create_character_preview(main_frame)
-        
-        # Botones del menú con mejor diseño
-        button_frame = tk.Frame(main_frame, bg=COLORS['bg'])
-        button_frame.pack(pady=40)
-        
-        menu_buttons = [
-            ("🎮 NUEVA AVENTURA", self.show_enhanced_character_selection, COLORS['primary']),
-            ("✨ PERSONALIZAR", self.show_customization_screen, COLORS['accent']),
-            ("🏆 HALL OF FAME", self.show_enhanced_ranking, '#f1c40f'),
-            ("❓ GUÍA DEL SISTEMA", self.show_enhanced_help, COLORS['container_bg2']),
-            ("🚪 SALIR DEL SISTEMA", self.game.root.quit, COLORS['secondary'])
-        ]
-        
-        for text, command, color in menu_buttons:
-            btn = tk.Button(
-                button_frame,
-                text=text,
-                font=self.game.normal_font,
-                bg=color,
-                fg=COLORS['text_secondary'],
-                activebackground=self._lighten_color(color),
-                command=command,
-                width=25,
-                height=2,
-                cursor='hand2',
-                relief='raised',
-                bd=2
-            )
-            btn.pack(pady=8)
-    
-    def _create_character_preview(self, parent):
-        """Crea preview de personajes en el menú principal"""
-        preview_frame = tk.Frame(parent, bg=COLORS['modal'], relief='ridge', bd=2)
-        preview_frame.pack(pady=20, padx=100, fill='x')
-        
-        preview_label = tk.Label(
-            preview_frame,
-            text="👥 HÉROES DEL CIBERESPACIO",
-            font=self.game.header_font,
-            bg=COLORS['modal'],
-            fg=COLORS['accent']
-        )
-        preview_label.pack(pady=10)
-        
-        chars_frame = tk.Frame(preview_frame, bg=COLORS['modal'])
-        chars_frame.pack(pady=10, padx=20)
-        
-        characters = [
-            {'icon': '👤', 'name': 'USUARIO', 'desc': 'Supervivencia digital'},
-            {'icon': '💻', 'name': 'HACKER', 'desc': 'Justicia cibernética'},
-            {'icon': '🎭', 'name': 'OPERATIVO', 'desc': 'Operaciones encubiertas'}
-        ]
-        
-        for char in characters:
-            char_frame = tk.Frame(chars_frame, bg=COLORS['container_bg2'], relief='sunken', bd=1)
-            char_frame.pack(side='left', padx=15, pady=10)
-            
-            icon_label = tk.Label(
-                char_frame,
-                text=char['icon'],
-                font=('Arial', 24),
-                bg=COLORS['container_bg2']
-            )
-            icon_label.pack(pady=5)
-            
-            name_label = tk.Label(
-                char_frame,
-                text=char['name'],
-                font=self.game.small_font,
-                bg=COLORS['container_bg2'],
-                fg=COLORS['text']
-            )
-            name_label.pack()
-            
-            desc_label = tk.Label(
-                char_frame,
-                text=char['desc'],
-                font=('Arial', 8),
-                bg=COLORS['container_bg2'],
-                fg=COLORS['text_secondary']
-            )
-            desc_label.pack(pady=2)
-    
-    def show_character_display_panel(self, parent):
-        """Panel de visualización de personajes en tiempo real"""
-        display_frame = tk.Frame(parent, bg=COLORS['header_bg'], relief='groove', bd=2)
-        display_frame.pack(fill='x', pady=10, padx=20)
-        
-        title_label = tk.Label(
-            display_frame,
-            text="🎯 ESTADO DE LOS AGENTES",
-            font=self.game.small_font,
-            bg=COLORS['header_bg'],
-            fg=COLORS['accent']
-        )
-        title_label.pack(pady=8)
-        
-        # Mostrar jugador principal
-        player_appearance = self.game.effects_system.get_character_appearance(
-            self.game.selected_character, 
-            self.game.active_effects
-        )
-        
-        player_frame = tk.Frame(display_frame, bg=COLORS['container_bg2'])
-        player_frame.pack(fill='x', padx=30, pady=5)
-        
-        player_icon = tk.Label(
-            player_frame,
-            text=player_appearance['icon'],
-            font=('Arial', 20),
-            bg=COLORS['container_bg2']
-        )
-        player_icon.pack(side='left', padx=10)
-        
-        player_info = tk.Label(
-            player_frame,
-            text=f"TÚ ({self.game.selected_character.title()}) - {self.game.player_progress}%",
-            font=self.game.small_font,
-            bg=COLORS['container_bg2'],
-            fg=player_appearance['color']
-        )
-        player_info.pack(side='left', padx=10)
-        
-        # Mostrar IAs
-        for ai in self.game.ai_players:
-            ai_frame = tk.Frame(display_frame, bg=COLORS['modal'])
-            ai_frame.pack(fill='x', padx=40, pady=2)
-            
-            ai_icon = tk.Label(
-                ai_frame,
-                text=ai.character_type[0].upper(),
-                font=('Arial', 16),
-                bg=COLORS['modal'],
-                fg=ai.character_type_color
-            )
-            ai_icon.pack(side='left', padx=10)
-            
-            ai_info = tk.Label(
-                ai_frame,
-                text=f"{ai.character_type.title()} - {ai.progress}%",
-                font=self.game.small_font,
-                bg=COLORS['modal'],
-                fg=COLORS['text_secondary']
-            )
-            ai_info.pack(side='left', padx=10)
-            
-            if ai.completed:
-                status_label = tk.Label(
-                    ai_frame,
-                    text="✅ OBJETIVO CUMPLIDO",
-                    font=('Arial', 8, 'bold'),
-                    bg=COLORS['modal'],
-                    fg=COLORS['secondary']
-                )
-                status_label.pack(side='right', padx=10)

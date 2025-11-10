@@ -2,20 +2,11 @@
   {
     "player": "jonexz",
     "character": "usuario",
-    "time": 17,
-    "errors": 3,
-    "completed": false,
-    "score": 0,
-    "date": "2025-11-07 20:08:47"
-  },
-  {
-    "player": "RHON",
-    "character": "hacker",
-    "time": 108,
-    "errors": 3,
-    "completed": false,
-    "score": 0,
-    "date": "2025-11-07 20:25:31"
+    "time": 34,
+    "errors": 1,
+    "completed": true,
+    "score": 10428,
+    "date": "2025-11-08 01:16:09"
   },
   {
     "player": "maxi",
@@ -34,5 +25,23 @@
     "completed": true,
     "score": 8390,
     "date": "2025-11-07 20:04:18"
+  },
+  {
+    "player": "jonexz",
+    "character": "usuario",
+    "time": 17,
+    "errors": 3,
+    "completed": false,
+    "score": 0,
+    "date": "2025-11-07 20:08:47"
+  },
+  {
+    "player": "RHON",
+    "character": "hacker",
+    "time": 108,
+    "errors": 3,
+    "completed": false,
+    "score": 0,
+    "date": "2025-11-07 20:25:31"
   }
 ]
