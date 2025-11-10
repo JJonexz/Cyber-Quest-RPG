@@ -2,6 +2,15 @@
   {
     "player": "jonexz",
     "character": "usuario",
+    "time": 31,
+    "errors": 2,
+    "completed": true,
+    "score": 10945,
+    "date": "2025-11-10 16:37:21"
+  },
+  {
+    "player": "jonexz",
+    "character": "usuario",
     "time": 34,
     "errors": 1,
     "completed": true,
@@ -43,5 +52,14 @@
     "completed": false,
     "score": 0,
     "date": "2025-11-07 20:25:31"
+  },
+  {
+    "player": "jonexz",
+    "character": "usuario",
+    "time": 9,
+    "errors": 4,
+    "completed": false,
+    "score": 0,
+    "date": "2025-11-10 16:47:19"
   }
 ]
