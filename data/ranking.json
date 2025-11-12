@@ -61,5 +61,50 @@
     "completed": false,
     "score": 0,
     "date": "2025-11-10 16:47:19"
+  },
+  {
+    "player": "Jugador",
+    "character": "usuario",
+    "time": 42,
+    "errors": 1,
+    "completed": false,
+    "score": 0,
+    "date": "2025-11-10 20:40:53"
+  },
+  {
+    "player": "Jugador",
+    "character": "usuario",
+    "time": 39,
+    "errors": 2,
+    "completed": false,
+    "score": 0,
+    "date": "2025-11-10 21:26:30"
+  },
+  {
+    "player": "Jugador",
+    "character": "usuario",
+    "time": 21,
+    "errors": 3,
+    "completed": false,
+    "score": 0,
+    "date": "2025-11-12 18:28:15"
+  },
+  {
+    "player": "Jugador",
+    "character": "usuario",
+    "time": 12,
+    "errors": 1,
+    "completed": false,
+    "score": 0,
+    "date": "2025-11-12 18:34:05"
+  },
+  {
+    "player": "Jugador",
+    "character": "usuario",
+    "time": 26,
+    "errors": 2,
+    "completed": false,
+    "score": 0,
+    "date": "2025-11-12 18:42:03"
   }
 ]

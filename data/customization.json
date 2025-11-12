@@ -4,5 +4,15 @@
       "shield"
     ],
     "timestamp": 1762804030.6510952
+  },
+  "Jugador_usuario": {
+    "accessories": [],
+    "timestamp": 1762983769.039577
+  },
+  "Jugador_cyberdelincuente": {
+    "accessories": [
+      "virus"
+    ],
+    "timestamp": 1762819137.7943127
   }
 }

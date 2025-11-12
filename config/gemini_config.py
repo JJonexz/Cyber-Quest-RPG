@@ -3,7 +3,7 @@
 import os
 
 GEMINI_CONFIG = {
-    'api_key': os.getenv('GEMINI_API_KEY'),
-    'model': 'gemini-pro',
+    'api_key': os.getenv('AIzaSyA0KzSkYvmfzYxMqLBp9CHnkFjtgzHjvyY'),
+    'model': 'gemini-2.5',
     'max_tokens': 50
 }

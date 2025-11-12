@@ -75,8 +75,19 @@ class RankingSystem:
             
             print(f"📊 Guardando puntuación: {score_data}")
             
-            # Añadir nueva puntuación
-            self.rankings.append(score_data)
+            # Si ya existe una entrada para el mismo jugador y mismo personaje, sobrescribirla
+            existing_idx = None
+            for idx, r in enumerate(self.rankings):
+                if r.get('player') == score_data['player'] and r.get('character') == score_data['character']:
+                    existing_idx = idx
+                    break
+
+            if existing_idx is not None:
+                print(f"ℹ️ Reemplazando puntuación anterior de {score_data['player']} ({score_data['character']})")
+                self.rankings[existing_idx] = score_data
+            else:
+                # Añadir nueva puntuación
+                self.rankings.append(score_data)
             
             # CORRECCIÓN: Ordenar correctamente
             # Primero por completado (True primero), luego por score descendente

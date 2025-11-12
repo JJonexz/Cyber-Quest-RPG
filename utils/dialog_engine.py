@@ -1,10 +1,10 @@
-# utils/dialog_engine.py - MEJORADO CON GEMINI AI
+# utils/dialog_engine.py - VERSIÓN MEJORADA CON MÁS CONTENIDO
 import random
 from typing import Dict, List
 import os
 
 class DialogEngine:
-    """Motor de diálogos con integración de Gemini AI"""
+    """Motor de diálogos mejorado con más contenido y mejor integración"""
     
     def __init__(self):
         self.gemini_enabled = False
@@ -12,15 +12,18 @@ class DialogEngine:
         self._initialize_gemini()
     
     def _initialize_gemini(self):
-        """Intenta inicializar Gemini AI"""
+        """Intenta inicializar Gemini AI (opcional)"""
         try:
             import google.generativeai as genai
             
             api_key = os.getenv('GEMINI_API_KEY')
+            if not api_key:
+                # Intentar con clave hardcoded como fallback
+                api_key = 'AIzaSyA0KzSkYvmfzYxMqLBp9CHnkFjtgzHjvyY'
+            
             if api_key:
                 genai.configure(api_key=api_key)
                 
-                # Configuración del modelo
                 generation_config = {
                     "temperature": 0.9,
                     "top_p": 0.95,
@@ -44,15 +47,15 @@ class DialogEngine:
                 self.gemini_enabled = True
                 print("✅ Gemini AI habilitado para diálogos")
             else:
-                print("⚠️ GEMINI_API_KEY no encontrada - usando diálogos locales")
+                print("ℹ️ GEMINI_API_KEY no encontrada - usando diálogos locales")
         except ImportError:
-            print("⚠️ google-generativeai no instalado - usando diálogos locales")
+            print("ℹ️ google-generativeai no instalado - usando diálogos locales")
             print("   Instalar con: pip install google-generativeai")
         except Exception as e:
             print(f"⚠️ Error inicializando Gemini: {e} - usando diálogos locales")
     
     def generate_character_dialog(self, character_type: str, situation: str, emotion: str = "neutral") -> str:
-        """Genera diálogo contextual para personajes"""
+        """Genera diálogo contextual para personajes - MEJORADO"""
         
         # Intentar usar Gemini AI si está disponible
         if self.gemini_enabled:
@@ -67,9 +70,8 @@ class DialogEngine:
         return self._get_enhanced_dialog(character_type, situation, emotion)
     
     def _generate_with_gemini(self, character_type: str, situation: str, emotion: str) -> str:
-        """Genera diálogo usando Gemini AI"""
+        """Genera diálogo usando Gemini AI - MEJORADO"""
         
-        # Definir personalidades de personajes
         personalities = {
             'usuario': {
                 'role': 'un ciudadano común preocupado por su privacidad digital',
@@ -90,7 +92,6 @@ class DialogEngine:
         
         personality = personalities.get(character_type, personalities['usuario'])
         
-        # Crear prompt contextual
         prompt = f"""Eres {personality['role']} en un juego cyberpunk.
 
 Personalidad: {personality['traits']}
@@ -103,30 +104,25 @@ Genera UN diálogo CORTO (máximo 20 palabras) que el personaje diría en esta s
 El diálogo debe ser INMERSIVO, en ESPAÑOL, y reflejar la personalidad del personaje.
 NO uses comillas. Solo el diálogo directo.
 
-Ejemplos de tono:
-- Usuario (nervioso): "El sistema está rastreando todo... debo actuar con cuidado"
-- Hacker (confiado): "Vulnerabilidad detectada. Explotando el firewall ahora"
-- Cyberdelincuente (calculador): "Las sombras ocultan mis movimientos. Perfecto"
-
 Tu diálogo:"""
         
-        # Generar con Gemini
-        response = self.model.generate_content(prompt)
-        
-        if response and response.text:
-            dialog = response.text.strip()
-            # Limpiar el diálogo
-            dialog = dialog.replace('"', '').replace("'", "").strip()
-            # Limitar longitud
-            words = dialog.split()
-            if len(words) > 25:
-                dialog = ' '.join(words[:25]) + '...'
-            return dialog
+        try:
+            response = self.model.generate_content(prompt)
+            
+            if response and response.text:
+                dialog = response.text.strip()
+                dialog = dialog.replace('"', '').replace("'", "").strip()
+                words = dialog.split()
+                if len(words) > 25:
+                    dialog = ' '.join(words[:25]) + '...'
+                return dialog
+        except Exception as e:
+            print(f"⚠️ Error específico en Gemini: {e}")
         
         return None
     
     def _get_enhanced_dialog(self, character_type: str, situation: str, emotion: str) -> str:
-        """Diálogos mejorados locales como fallback"""
+        """Diálogos mejorados locales como fallback - CONTENIDO EXPANDIDO"""
         dialogs = {
             'usuario': {
                 'neutral': [
@@ -137,7 +133,14 @@ Tu diálogo:"""
                     "Revisando integridad de los datos.",
                     "Espero que esto funcione...",
                     "Debo mantener la calma y pensar con claridad.",
-                    "Mi información personal está en riesgo."
+                    "Mi información personal está en riesgo.",
+                    "Cada paso debe ser calculado.",
+                    "No puedo permitir errores ahora.",
+                    "La interfaz responde adecuadamente.",
+                    "Sigo los procedimientos establecidos.",
+                    "Confirmando que todo esté en orden.",
+                    "La seguridad es mi prioridad absoluta.",
+                    "Avanzando con precaución necesaria."
                 ],
                 'stressed': [
                     "¡La presión aumenta! Necesito mantener la calma...",
@@ -147,7 +150,14 @@ Tu diálogo:"""
                     "¡La situación se complica! Buscando salida...",
                     "¡Detectaron actividad sospechosa!",
                     "No puedo permitir que accedan a mis datos.",
-                    "Esto es más peligroso de lo que pensaba..."
+                    "Esto es más peligroso de lo que pensaba...",
+                    "El tiempo se agota rápidamente.",
+                    "¡Necesito una solución ya!",
+                    "¡Las alertas no cesan! Esto es serio.",
+                    "Mi corazón late al ritmo de las alarmas.",
+                    "¿Dónde está la salida? Necesito escapar.",
+                    "Los sistemas fallan uno tras otro.",
+                    "¡No puedo fallar ahora, demasiado en juego!"
                 ],
                 'victory': [
                     "¡Lo logré! El sistema es seguro nuevamente.",
@@ -157,7 +167,14 @@ Tu diálogo:"""
                     "¡Crisis evitada! Todo bajo control.",
                     "Finalmente puedo respirar tranquilo.",
                     "Sabía que podía hacerlo si me concentraba.",
-                    "Mi información está protegida al fin."
+                    "Mi información está protegida al fin.",
+                    "¡Superé todos los obstáculos!",
+                    "La perseverancia rindió frutos.",
+                    "¡Increíble! Todo salió mejor de lo esperado.",
+                    "La seguridad ha sido restaurada por completo.",
+                    "Mis datos están a salvo, misión cumplida.",
+                    "¡Éxito total! Aprendí mucho en el proceso.",
+                    "El sistema respira aliviado, y yo también."
                 ],
                 'action': [
                     "Ejecutando protocolo de seguridad...",
@@ -167,7 +184,14 @@ Tu diálogo:"""
                     "Reforzando protecciones del sistema.",
                     "Tomando acción para protegerme.",
                     "Debo ser estratégico en este momento.",
-                    "Cada segundo cuenta ahora."
+                    "Cada segundo cuenta ahora.",
+                    "Aplicando solución rápida.",
+                    "Iniciando secuencia de defensa.",
+                    "Configurando parámetros de emergencia.",
+                    "Ejecutando procedimiento crítico.",
+                    "Activando todos los protocolos.",
+                    "No hay tiempo que perder, acción inmediata.",
+                    "Implementando plan de contingencia."
                 ]
             },
             'hacker': {
@@ -179,7 +203,14 @@ Tu diálogo:"""
                     "Evaluando puntos de entrada potenciales.",
                     "El código revela sus secretos...",
                     "Arquitectura del sistema mapeada.",
-                    "Buscando exploits conocidos en la base de datos."
+                    "Buscando exploits conocidos en la base de datos.",
+                    "Analizando patrones de seguridad.",
+                    "Recopilando información crítica.",
+                    "Descompilando módulos sospechosos.",
+                    "Trazando rutas de acceso alternativas.",
+                    "Verificando integridad del kernel.",
+                    "Monitorizando procesos en segundo plano.",
+                    "Evaluando superficie de ataque disponible."
                 ],
                 'stressed': [
                     "¡Contramedidas activadas! El sistema se defiende...",
@@ -189,7 +220,14 @@ Tu diálogo:"""
                     "¡Firewalls reforzados! Necesito otra estrategia.",
                     "IDS activo, cambiando de táctica.",
                     "El honeypot casi me atrapa.",
-                    "Sistema de defensa más robusto de lo anticipado."
+                    "Sistema de defensa más robusto de lo anticipado.",
+                    "¡Rastreadores en mi cola!",
+                    "Necesito replantear mi enfoque.",
+                    "¡El sistema contraataca! Defensas automáticas activas.",
+                    "Múltiples capas de seguridad, esto se complica.",
+                    "¡Alerta! He sido marcado como amenaza.",
+                    "Los protocolos de defensa son agresivos.",
+                    "¡Código de evasión fallando! Plan B necesario."
                 ],
                 'victory': [
                     "¡Sistemas expuestos! Justicia digital servida.",
@@ -199,7 +237,14 @@ Tu diálogo:"""
                     "Amenaza neutralizada. Trabajo completado.",
                     "Exploit ejecutado perfectamente.",
                     "El sistema está ahora fortificado.",
-                    "Objetivo alcanzado sin dejar rastros."
+                    "Objetivo alcanzado sin dejar rastros.",
+                    "La seguridad ha sido restaurada.",
+                    "Protocolo de protección implementado.",
+                    "¡Brecha sellada! El sistema respira aliviado.",
+                    "Código malicioso eliminado por completo.",
+                    "Infraestructura asegurada, trabajo impecable.",
+                    "¡Victoria técnica! Todos los sistemas verdes.",
+                    "El enemigo digital ha sido derrotado."
                 ],
                 'action': [
                     "Desplegando exploits...",
@@ -209,7 +254,14 @@ Tu diálogo:"""
                     "Probando vectores de ataque alternativos.",
                     "Bypasseando autenticación...",
                     "Inyectando payload personalizado.",
-                    "Escalando privilegios en el sistema."
+                    "Escalando privilegios en el sistema.",
+                    "Ejecutando exploit de día cero.",
+                    "Aplicando técnicas de ingeniería inversa.",
+                    "Compilando código de acceso forzado.",
+                    "Ejecutando ataque de diccionario optimizado.",
+                    "Inyectando SQL en puntos vulnerables.",
+                    "Desactivando sistemas de monitoreo.",
+                    "Activando puertas traseras estratégicas."
                 ]
             },
             'cyberdelincuente': {
@@ -221,7 +273,14 @@ Tu diálogo:"""
                     "Evaluando riesgos y recompensas.",
                     "Las sombras digitales me protegen.",
                     "Invisibilidad garantizada por ahora.",
-                    "El anonimato es mi mejor arma."
+                    "El anonimato es mi mejor arma.",
+                    "Sin rastros, sin pruebas.",
+                    "El fantasma digital continúa su obra.",
+                    "Deslizándome entre los bits sin dejar huella.",
+                    "El silencio digital es mi aliado.",
+                    "Observando desde la oscuridad.",
+                    "Preparando el siguiente asalto silencioso.",
+                    "La red es mi territorio de caza."
                 ],
                 'stressed': [
                     "¡Casi me detectan! Activando protocolos de escape...",
@@ -231,7 +290,14 @@ Tu diálogo:"""
                     "¡Situación crítica! Plan B activado.",
                     "El cerco se cierra, debo ser más astuto.",
                     "Sistemas de rastreo a full capacidad.",
-                    "Momento de desaparecer del radar."
+                    "Momento de desaparecer del radar.",
+                    "La cacería ha comenzado.",
+                    "Necesito una ruta de escape inmediata.",
+                    "¡Marcado! Todos los sistemas me buscan.",
+                    "La red se cierra a mi alrededor.",
+                    "¡Trampas digitales por todas partes!",
+                    "El sistema huele mi presencia.",
+                    "¡Alerta máxima! Modo evasión total."
                 ],
                 'victory': [
                     "¡El botín es mío! Operación completada con éxito.",
@@ -241,7 +307,14 @@ Tu diálogo:"""
                     "¡Tesoro adquirido! Operación impecable.",
                     "Payload entregado, extracción exitosa.",
                     "El fantasma digital golpea de nuevo.",
-                    "Perfecto. Como si nunca hubiera estado aquí."
+                    "Perfecto. Como si nunca hubiera estado aquí.",
+                    "Otro trabajo limpio para mi registro.",
+                    "Las sombras celebran mi victoria.",
+                    "¡Recompensa obtenida! Desapareciendo en la noche.",
+                    "Objetivo cumplido, identidad intacta.",
+                    "La red olvidará mi paso pronto.",
+                    "¡Éxito silencioso! Nadie supo que estuve aquí.",
+                    "Tesoro digital seguro, misión terminada."
                 ],
                 'action': [
                     "Ejecutando procedimientos de infiltración...",
@@ -251,29 +324,37 @@ Tu diálogo:"""
                     "Manipulando sistemas de registro.",
                     "Borrando huellas digitales...",
                     "Estableciendo punto de acceso persistente.",
-                    "Operación fantasma en progreso."
+                    "Operación fantasma en progreso.",
+                    "Despliegue de malware personalizado.",
+                    "Ejecutando protocolo de extracción.",
+                    "Silenciando alarmas del sistema.",
+                    "Creando identidades digitales falsas.",
+                    "Envenenando caché del sistema.",
+                    "Redirigiendo tráfico de vigilancia.",
+                    "Activando cortinas de humo digitales."
                 ]
             }
         }
         
-        # Mapeo inteligente de emociones basado en situación
-        if any(word in situation.lower() for word in ['éxito', 'exito', 'victoria', 'completado', 'logrado', 'ganado']):
+        # Mapeo inteligente de emociones mejorado
+        situation_lower = situation.lower()
+        if any(word in situation_lower for word in ['éxito', 'exito', 'victoria', 'completado', 'logrado', 'ganado', 'triunfo']):
             emotion_key = 'victory'
-        elif any(word in situation.lower() for word in ['peligro', 'amenaza', 'estrés', 'estres', 'problema', 'error', 'fallo', 'detectado']):
+        elif any(word in situation_lower for word in ['peligro', 'amenaza', 'estrés', 'estres', 'problema', 'error', 'fallo', 'detectado', 'pérdida', 'pérdida']):
             emotion_key = 'stressed'
-        elif any(word in situation.lower() for word in ['acción', 'accion', 'decisión', 'decisión', 'opción', 'ejecutar']):
+        elif any(word in situation_lower for word in ['acción', 'accion', 'decisión', 'opción', 'ejecutar', 'proceder', 'actuar']):
             emotion_key = 'action'
         else:
             emotion_key = emotion if emotion in ['neutral', 'stressed', 'victory', 'action'] else 'neutral'
         
-        # Obtener diálogos disponibles o usar default
+        # Obtener diálogos disponibles
         character_dialogs = dialogs.get(character_type, dialogs['usuario'])
         available_dialogs = character_dialogs.get(emotion_key, character_dialogs['neutral'])
         
         return random.choice(available_dialogs)
     
     def generate_event_description(self, event_type: str) -> str:
-        """Genera descripciones narrativas para eventos globales"""
+        """Genera descripciones narrativas para eventos globales - MEJORADO"""
         if self.gemini_enabled:
             try:
                 prompt = f"""Genera una descripción CORTA (máximo 15 palabras) para un evento en un juego cyberpunk:
@@ -283,11 +364,6 @@ Tipo de evento: {event_type}
 La descripción debe ser DRAMÁTICA y INMERSIVA.
 NO uses comillas. Solo la descripción directa.
 
-Ejemplos:
-- "Alerta de seguridad propagándose por toda la red"
-- "Brecha crítica detectada en el núcleo del sistema"
-- "Pulso electromagnético desestabiliza las conexiones"
-
 Tu descripción:"""
                 
                 response = self.model.generate_content(prompt)
@@ -296,17 +372,20 @@ Tu descripción:"""
             except:
                 pass
         
-        # Fallback local
+        # Fallback local mejorado
         descriptions = {
-            'security_alert': 'Alerta de seguridad propagándose por toda la red',
-            'system_vulnerability': 'Vulnerabilidad crítica descubierta en el sistema',
-            'data_corruption': 'Corrupción de datos afectando múltiples sectores',
-            'network_boost': 'Mejora temporal en la infraestructura de red'
+            'security_alert': '🚨 ALERTA CRÍTICA: Sistemas de defensa activados en toda la red',
+            'system_vulnerability': '🔓 VULNERABILIDAD CRÍTICA: Brecha de seguridad masiva detectada',
+            'data_corruption': '💾 COLAPSO DE DATOS: Corrupción sistémica afectando núcleos',
+            'network_boost': '📡 OPTIMIZACIÓN GLOBAL: Ancho de banda aumentado significativamente',
+            'virus_outbreak': '🦠 BROTE VIRAL: Malware de propagación rápida detectado',
+            'firewall_breach': '🛡️ BRECHA DEFENSIVA: Sistemas de protección comprometidos',
+            'encryption_failure': '🔒 FALLO ENCRIPTACIÓN: Protocolos de seguridad colapsados'
         }
         return descriptions.get(event_type, 'Evento desconocido en el sistema')
     
     def generate_ending_dialog(self, character_type: str, won: bool, stats: dict) -> str:
-        """Genera diálogo final del personaje"""
+        """Genera diálogo final del personaje - MEJORADO"""
         if self.gemini_enabled:
             try:
                 result = "victoria" if won else "derrota"
@@ -329,18 +408,18 @@ Tu diálogo:"""
             except:
                 pass
         
-        # Fallback local
+        # Fallback local mejorado
         if won:
             endings = {
-                'usuario': "Lo logré... mi información está segura. Nunca más subestimaré la importancia de la privacidad.",
-                'hacker': "Misión cumplida. El sistema está más seguro ahora. La justicia digital prevalece.",
-                'cyberdelincuente': "Objetivo completado sin rastros. Otro trabajo perfecto en las sombras digitales."
+                'usuario': "Lo logré... mi información está segura. Nunca más subestimaré la importancia de la privacidad digital.",
+                'hacker': "Misión cumplida. El sistema está más seguro ahora. La justicia digital prevalece una vez más.",
+                'cyberdelincuente': "Objetivo completado sin rastros. Otro trabajo perfecto en las sombras digitales. Hasta la próxima."
             }
         else:
             endings = {
-                'usuario': "No pude proteger mis datos... pero aprendí una lección valiosa sobre seguridad.",
-                'hacker': "El sistema era más robusto de lo esperado. Regresaré con mejores herramientas.",
-                'cyberdelincuente': "Me detectaron esta vez... pero un fantasma siempre encuentra otra sombra."
+                'usuario': "No pude proteger mis datos... pero aprendí una lección valiosa sobre seguridad en la red.",
+                'hacker': "El sistema era más robusto de lo esperado. Regresaré con mejores herramientas y más conocimiento.",
+                'cyberdelincuente': "Me detectaron esta vez... pero un fantasma siempre encuentra otra sombra donde esconderse."
             }
         
         return endings.get(character_type, "La batalla en el ciberespacio continúa...")
