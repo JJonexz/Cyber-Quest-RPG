@@ -48,7 +48,7 @@ class CharacterDatabase:
                 'icon': '💻',
                 'difficulty': 'MEDIO',
                 'description': 'Experto en seguridad informática. Usa sus habilidades para exponer vulnerabilidades y proteger sistemas.',
-                'color': '#3498db'
+                'color': '#e67e22'
             },
             {
                 'name': 'Cyberdelincuente',
@@ -56,6 +56,6 @@ class CharacterDatabase:
                 'icon': '🎭',
                 'difficulty': 'DIFÍCIL',
                 'description': 'Maestro del sigilo digital. Opera en las sombras para lograr objetivos complejos sin ser detectado.',
-                'color': '#e74c3c'
+                'color': '#E34232'
             }
         ]

@@ -98,7 +98,7 @@ class GameScreens:
     # ========================================================================
     
     def show_main_menu(self):
-        """Menú principal con diseño en dos columnas sin scroll"""
+        """Menú principal con diseño en dos columnas horizontales"""
         self.game.clear_screen()
         
         # Frame principal sin scroll
@@ -127,17 +127,17 @@ class GameScreens:
         )
         subtitle_label.pack(pady=(5, 0))
         
-        # Contenedor de dos columnas
-        columns_frame = tk.Frame(main_frame, bg=COLORS['bg'])
-        columns_frame.pack(expand=True, fill='both', pady=10)
+        # Contenedor principal horizontal
+        horizontal_frame = tk.Frame(main_frame, bg=COLORS['bg'])
+        horizontal_frame.pack(expand=True, fill='both', pady=20)
         
-        # ============== COLUMNA IZQUIERDA ==============
-        left_column = tk.Frame(columns_frame, bg=COLORS['bg'])
-        left_column.pack(side='left', expand=True, fill='both', padx=(0, 10))
+        # ============== COLUMNA IZQUIERDA - CONTENIDO ==============
+        left_column = tk.Frame(horizontal_frame, bg=COLORS['bg'])
+        left_column.pack(side='left', expand=True, fill='both', padx=(0, 15))
         
         # Panel de características
         features_frame = tk.Frame(left_column, bg=COLORS['modal'], relief='groove', bd=3)
-        features_frame.pack(pady=10, fill='x')
+        features_frame.pack(fill='both', expand=True, pady=(0, 15))
         
         features_title = tk.Label(
             features_frame,
@@ -146,10 +146,14 @@ class GameScreens:
             bg=COLORS['modal'],
             fg=COLORS['accent']
         )
-        features_title.pack(pady=10)
+        features_title.pack(pady=15)
         
         features = [
             "⚔️ Competencia en tiempo real contra IAs",
+            "🎯 Sistema de progresión por niveles",
+            "💾 Múltiples personajes jugables",
+            "🌐 Mundo cyberpunk inmersivo",
+            "🏆 Tabla de clasificación global"
         ]
         
         for feature in features:
@@ -162,9 +166,9 @@ class GameScreens:
             )
             feature_label.pack(pady=3)
         
-        # Preview de personajes (compacto)
+        # Preview de personajes
         preview_frame = tk.Frame(left_column, bg=COLORS['modal'], relief='ridge', bd=3)
-        preview_frame.pack(pady=10, fill='both', expand=True)
+        preview_frame.pack(fill='both', expand=True)
         
         preview_label = tk.Label(
             preview_frame,
@@ -173,67 +177,88 @@ class GameScreens:
             bg=COLORS['modal'],
             fg=COLORS['accent']
         )
-        preview_label.pack(pady=10)
+        preview_label.pack(pady=15)
         
         characters = [
             {'icon': '👤', 'name': 'USUARIO', 'desc': 'Supervivencia', 'diff': 'FÁCIL', 'color': '#00b894'},
-            {'icon': '💻', 'name': 'HACKER', 'desc': 'Justicia', 'diff': 'MEDIO', 'color': '#3498db'},
-            {'icon': '🎭', 'name': 'OPERATIVO', 'desc': 'Sigilo', 'diff': 'DIFÍCIL', 'color': '#e74c3c'}
+            {'icon': '💻', 'name': 'HACKER', 'desc': 'Justicia', 'diff': 'MEDIO', 'color': '#E67E22'},
+            {'icon': '🎭', 'name': 'CYBERDELINCUENTE', 'desc': 'Sigilo', 'diff': 'DIFÍCIL', 'color': '#e74c3c'}
         ]
         
-        for char in characters:
+        # Frame para organizar personajes horizontalmente - CON TAMAÑO FIJO
+        chars_container = tk.Frame(preview_frame, bg=COLORS['modal'])
+        chars_container.pack(fill='both', expand=True, padx=15, pady=10)
+        
+        # Configurar grid para que todas las columnas tengan el mismo peso
+        for i in range(len(characters)):
+            chars_container.grid_columnconfigure(i, weight=1, uniform="char_columns")
+        
+        for i, char in enumerate(characters):
+            # Frame con tamaño fijo para todos los personajes
             char_frame = tk.Frame(
-                preview_frame, 
+                chars_container, 
                 bg=COLORS['container_bg2'], 
                 relief='raised', 
                 bd=2,
                 highlightbackground=char['color'],
-                highlightthickness=2
+                highlightthickness=2,
+                width=180,  # Ancho fijo
+                height=180  # Alto fijo
             )
-            char_frame.pack(fill='x', padx=20, pady=5)
+            char_frame.grid(row=0, column=i, padx=5, pady=5, sticky='nsew')
+            char_frame.pack_propagate(False)  # Evita que se redimensione automáticamente
             
-            # Contenido horizontal compacto
+            # Contenido vertical centrado
             content_frame = tk.Frame(char_frame, bg=COLORS['container_bg2'])
-            content_frame.pack(fill='x', padx=10, pady=8)
+            content_frame.pack(expand=True, fill='both', padx=10, pady=15)
             
             icon_label = tk.Label(
                 content_frame,
                 text=char['icon'],
-                font=('Arial', 28),
+                font=('Arial', 24),
                 bg=COLORS['container_bg2']
             )
-            icon_label.pack(side='left', padx=5)
-            
-            info_frame = tk.Frame(content_frame, bg=COLORS['container_bg2'])
-            info_frame.pack(side='left', fill='x', expand=True, padx=10)
+            icon_label.pack(pady=(5, 10))
             
             name_label = tk.Label(
-                info_frame,
+                content_frame,
                 text=char['name'],
                 font=self.game.normal_font,
                 bg=COLORS['container_bg2'],
                 fg=char['color'],
-                anchor='w'
+                anchor='center',
+                wraplength=140  # Para que el texto largo se ajuste
             )
-            name_label.pack(fill='x')
+            name_label.pack(fill='x', pady=2)
             
             desc_label = tk.Label(
-                info_frame,
-                text=f"{char['desc']} | {char['diff']}",
+                content_frame,
+                text=char['desc'],
                 font=self.game.tiny_font,
                 bg=COLORS['container_bg2'],
                 fg=COLORS['text_secondary'],
-                anchor='w'
+                anchor='center',
+                wraplength=140
             )
-            desc_label.pack(fill='x')
+            desc_label.pack(fill='x', pady=2)
+            
+            diff_label = tk.Label(
+                content_frame,
+                text=char['diff'],
+                font=self.game.tiny_font,
+                bg=COLORS['container_bg2'],
+                fg=char['color'],
+                anchor='center'
+            )
+            diff_label.pack(fill='x', pady=2)
         
-        # ============== COLUMNA DERECHA ==============
-        right_column = tk.Frame(columns_frame, bg=COLORS['bg'])
-        right_column.pack(side='right', expand=True, fill='both', padx=(10, 0))
+        # ============== COLUMNA DERECHA - BOTONES ==============
+        right_column = tk.Frame(horizontal_frame, bg=COLORS['bg'])
+        right_column.pack(side='right', expand=True, fill='both', padx=(15, 0))
         
         # Botones del menú
         button_container = tk.Frame(right_column, bg=COLORS['modal'], relief='groove', bd=3)
-        button_container.pack(expand=True, fill='both', pady=10)
+        button_container.pack(expand=True, fill='both')
         
         button_title = tk.Label(
             button_container,
@@ -242,11 +267,12 @@ class GameScreens:
             bg=COLORS['modal'],
             fg=COLORS['accent']
         )
-        button_title.pack(pady=20)
+        button_title.pack(pady=25)
         
         button_frame = tk.Frame(button_container, bg=COLORS['modal'])
-        button_frame.pack(expand=True, pady=20)
+        button_frame.pack(expand=True, fill='both', padx=30, pady=20)
         
+        # MANTENIENDO EXACTAMENTE LOS MISMOS BOTONES Y FUNCIONALIDAD
         menu_buttons = [
             ("🎮 NUEVA AVENTURA", self.show_character_selection, COLORS['primary']),
             ("✨ PERSONALIZAR", lambda: self.show_customization_screen(start_after=False), COLORS['accent']),
@@ -281,13 +307,9 @@ class GameScreens:
             fg=COLORS['text_secondary']
         )
         footer_label.pack(side='bottom', pady=5)
-    
-    # ========================================================================
-    # SELECCIÓN DE PERSONAJE
-    # ========================================================================
-    
+
     def show_character_selection(self):
-        """Pantalla de selección de personaje"""
+        """Pantalla de selección de personaje - MANTENIENDO FUNCIONALIDAD ORIGINAL"""
         self.game.clear_screen()
         
         # Usar un contenedor con padding y scroll si el contenido es mayor que la ventana
@@ -336,7 +358,33 @@ class GameScreens:
         characters_frame = tk.Frame(main_frame, bg=COLORS['bg'])
         characters_frame.pack(pady=20, expand=True, fill='both')
         
-        characters = CharacterDatabase.get_all_characters()
+        # Usando datos locales en lugar de CharacterDatabase
+        characters = [
+            {
+                'type': 'usuario',
+                'name': 'USUARIO', 
+                'icon': '👤',
+                'description': 'Especialista en supervivencia y defensa',
+                'difficulty': 'FÁCIL',
+                'color': '#00b894'
+            },
+            {
+                'type': 'hacker', 
+                'name': 'HACKER',
+                'icon': '💻',
+                'description': 'Experto en justicia digital y ataques precisos',
+                'difficulty': 'MEDIO', 
+                'color': '#E67E22'
+            },
+            {
+                'type': 'cyberdelincuente',
+                'name': 'CYBERDELINCUENTE',
+                'icon': '🎭', 
+                'description': 'Maestro del sigilo y ataques sorpresa',
+                'difficulty': 'DIFÍCIL',
+                'color': '#e74c3c'
+            }
+        ]
         
         for i, char in enumerate(characters):
             char_container = tk.Frame(
@@ -415,7 +463,7 @@ class GameScreens:
                 )
                 stat_label.pack(fill='x', padx=5, pady=2)
             
-            # Botón seleccionar
+            # Botón seleccionar - MANTENIENDO LA FUNCIÓN ORIGINAL
             select_btn = tk.Button(
                 char_container,
                 text="🎯 SELECCIONAR",
@@ -444,9 +492,9 @@ class GameScreens:
             height=2
         )
         back_btn.pack(pady=20)
-    
+
     def select_character(self, character_type: str):
-        """Selecciona un personaje"""
+        """Selecciona un personaje - FUNCIÓN ORIGINAL EXACTA"""
         if not self.game.player_name.get().strip():
             messagebox.showwarning("⚠️ Nombre requerido", "Por favor ingresa tu nombre de usuario")
             return
@@ -913,7 +961,7 @@ class GameScreens:
         
         self.create_stat_bar(stats_frame, "💚 Salud", state['health'], '#00b894')
         self.create_stat_bar(stats_frame, "🚨 Detección", state['detection'], '#e74c3c')
-        self.create_stat_bar(stats_frame, "💎 Recursos", state['resources'], '#3498db')
+        self.create_stat_bar(stats_frame, "💎 Recursos", state['resources'], '#E67E22')
         
         # Estado especial
         if completed:
@@ -973,7 +1021,7 @@ class GameScreens:
         """Muestra el resultado de una acción"""
         result_window = tk.Toplevel(self.game.root)
         result_window.title("Resultado de Acción")
-        result_window.geometry("700x550")
+        result_window.geometry("850x600")
         result_window.configure(bg=COLORS['modal'])
         result_window.transient(self.game.root)
         result_window.grab_set()

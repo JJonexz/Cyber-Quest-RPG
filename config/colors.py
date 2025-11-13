@@ -10,9 +10,9 @@ COLORS = {
     'text_tertiary': '#000000',
     
     # Colores de acento
-    'accent': '#00b894',
-    'primary': '#4a0086',
-    'secondary': '#e67e22',
+    'accent': '#31D6B2',
+    'primary': '#4C0091',
+    'secondary': '#A80808',
     
     # Backgrounds
     'header_bg': '#051925',

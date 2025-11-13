@@ -1,110 +1,29 @@
 [
   {
-    "player": "jonexz",
+    "player": "Jugador",
     "character": "usuario",
-    "time": 31,
-    "errors": 2,
-    "completed": true,
-    "score": 10945,
-    "date": "2025-11-10 16:37:21"
-  },
-  {
-    "player": "jonexz",
-    "character": "usuario",
-    "time": 34,
-    "errors": 1,
-    "completed": true,
-    "score": 10428,
-    "date": "2025-11-08 01:16:09"
-  },
-  {
-    "player": "maxi",
-    "character": "usuario",
-    "time": 58,
+    "time": 14,
     "errors": 0,
     "completed": true,
-    "score": 9420,
-    "date": "2025-11-07 20:41:29"
+    "score": 14430,
+    "date": "2025-11-13 00:23:33"
   },
   {
-    "player": "jonexz",
-    "character": "usuario",
-    "time": 11,
-    "errors": 3,
-    "completed": true,
-    "score": 8390,
-    "date": "2025-11-07 20:04:18"
-  },
-  {
-    "player": "jonexz",
-    "character": "usuario",
-    "time": 17,
-    "errors": 3,
-    "completed": false,
-    "score": 0,
-    "date": "2025-11-07 20:08:47"
-  },
-  {
-    "player": "RHON",
+    "player": "Jugador",
     "character": "hacker",
-    "time": 108,
-    "errors": 3,
-    "completed": false,
-    "score": 0,
-    "date": "2025-11-07 20:25:31"
-  },
-  {
-    "player": "jonexz",
-    "character": "usuario",
-    "time": 9,
-    "errors": 4,
-    "completed": false,
-    "score": 0,
-    "date": "2025-11-10 16:47:19"
-  },
-  {
-    "player": "Jugador",
-    "character": "usuario",
-    "time": 42,
+    "time": 5,
     "errors": 1,
     "completed": false,
     "score": 0,
-    "date": "2025-11-10 20:40:53"
+    "date": "2025-11-13 00:19:13"
   },
   {
-    "player": "Jugador",
+    "player": "gonza",
     "character": "usuario",
-    "time": 39,
-    "errors": 2,
-    "completed": false,
-    "score": 0,
-    "date": "2025-11-10 21:26:30"
-  },
-  {
-    "player": "Jugador",
-    "character": "usuario",
-    "time": 21,
-    "errors": 3,
-    "completed": false,
-    "score": 0,
-    "date": "2025-11-12 18:28:15"
-  },
-  {
-    "player": "Jugador",
-    "character": "usuario",
-    "time": 12,
+    "time": 4,
     "errors": 1,
     "completed": false,
     "score": 0,
-    "date": "2025-11-12 18:34:05"
-  },
-  {
-    "player": "Jugador",
-    "character": "usuario",
-    "time": 26,
-    "errors": 2,
-    "completed": false,
-    "score": 0,
-    "date": "2025-11-12 18:42:03"
+    "date": "2025-11-13 00:15:45"
   }
 ]

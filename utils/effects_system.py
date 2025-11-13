@@ -31,7 +31,7 @@ class EffectsSystem:
         for effect in effects:
             if effect == 'virus':
                 appearance['icon'] = '🤢'
-                appearance['color'] = '#9b59b6'
+                appearance['color'] = '#541170'
                 appearance['posture'] = 'infected'
             elif effect == 'firewall_blocked':
                 appearance['icon'] = '🚫'

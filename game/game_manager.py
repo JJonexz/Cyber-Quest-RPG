@@ -163,7 +163,7 @@ class CyberQuestGame:
             self.player_progress += progress_gain
             self.player_errors += 1
             result_text = "❌ Algo salió mal..."
-            result_color = COLORS['secondary']
+            result_color = COLORS['bg']
             emotion = "stressed"
         
         # Limitar progreso

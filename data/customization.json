@@ -7,12 +7,18 @@
   },
   "Jugador_usuario": {
     "accessories": [],
-    "timestamp": 1762983769.039577
+    "timestamp": 1763004198.5265927
   },
   "Jugador_cyberdelincuente": {
-    "accessories": [
-      "virus"
-    ],
-    "timestamp": 1762819137.7943127
+    "accessories": [],
+    "timestamp": 1762996007.4184105
+  },
+  "Jugador_hacker": {
+    "accessories": [],
+    "timestamp": 1763003948.3395705
+  },
+  "gonza_usuario": {
+    "accessories": [],
+    "timestamp": 1763003740.7043357
   }
 }
