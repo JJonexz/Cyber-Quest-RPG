@@ -61,5 +61,14 @@
     "completed": false,
     "score": 0,
     "date": "2025-11-10 16:47:19"
+  },
+  {
+    "player": "Jugador",
+    "character": "cyberdelincuente",
+    "time": 45,
+    "errors": 3,
+    "completed": false,
+    "score": 0,
+    "date": "2025-11-12 22:22:21"
   }
 ]
