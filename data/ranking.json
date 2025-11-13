@@ -70,5 +70,14 @@
     "completed": false,
     "score": 0,
     "date": "2025-11-12 22:22:21"
+  },
+  {
+    "player": "Jugador",
+    "character": "usuario",
+    "time": 80,
+    "errors": 1,
+    "completed": false,
+    "score": 0,
+    "date": "2025-11-13 00:54:57"
   }
 ]

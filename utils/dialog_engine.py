@@ -16,7 +16,7 @@ class DialogEngine:
         try:
             import google.generativeai as genai
             
-            api_key = os.getenv('GEMINI_API_KEY')
+            api_key = 'AIzaSyBv5D44Frk4cTTqOMXxvP8qW8pK4i6n4ig'
             if api_key:
                 genai.configure(api_key=api_key)
                 

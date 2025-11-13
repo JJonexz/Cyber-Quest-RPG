@@ -1,8 +1,8 @@
 # ============================================================================
 # ARCHIVO: models/story.py
-# DESCRIPCIÓN: Sistema de generación de historias dinámicas con IA.
-#              Historias realistas de ciberseguridad con tags en eventos y
-#              opciones. Selección de opciones estrictamente contextual por tag.
+# DESCRIPCIÓN: Sistema de generación de historias dinámicas con IA mejorado.
+# Historias realistas de ciberseguridad con contexto persistente y
+# correlación optimizada entre eventos y opciones.
 # ============================================================================
 
 import random
@@ -10,111 +10,664 @@ from typing import Dict, List, Any, Optional, Tuple
 
 
 class StoryGenerator:
-
-    # (Eliminada la versión dañada y duplicada de _generate_options)
-
+    """Generador de historias de ciberseguridad con narrativa coherente y contextual."""
+    
     def __init__(self, seed: Optional[int] = None):
         if seed is not None:
             random.seed(seed)
         self.story_templates = self._load_story_templates()
+        self.current_story = None
+        self.stage_index = 0
+        self.narrative_memory = []  # Memoria de eventos pasados para contexto
 
     def _load_story_templates(self) -> Dict[str, Any]:
-        """Carga plantillas base para generar historias diferenciadas por dificultad/personaje."""
+        """Carga plantillas base optimizadas por rol y dificultad."""
         return {
             'scenarios': [
-                # Usuario: oficinista, historias de defensa personal y errores comunes
+                # USUARIO: Empleado defendiéndose de amenazas
                 {
                     'id': 'usuario_oficina',
-                    'name': 'Riesgos Digitales en la Oficina',
-                    'context': 'Como oficinista, enfrentas intentos de engaño digital, dispositivos sospechosos y errores cotidianos que pueden poner en riesgo tus datos y los de la empresa.',
+                    'name': 'Supervivencia Digital en la Oficina',
+                    'context': 'Eres un empleado que debe identificar y responder correctamente a intentos de phishing, dispositivos sospechosos, y técnicas de ingeniería social dirigidas a ti y tus compañeros.',
                     'locations': [
-                        {'name': 'Bandeja de Entrada', 'connections': ['PC Personal', 'Red WiFi Pública']},
-                        {'name': 'PC Personal', 'connections': ['Bandeja de Entrada', 'Dispositivo Móvil']},
-                        {'name': 'Dispositivo Móvil', 'connections': ['PC Personal', 'Café con WiFi']},
-                        {'name': 'Café con WiFi', 'connections': ['Dispositivo Móvil', 'Bandeja de Entrada']},
-                        {'name': 'Red WiFi Pública', 'connections': ['Café con WiFi']}
+                        {'name': 'Escritorio', 'connections': ['Sala de Reuniones', 'Cafetería']},
+                        {'name': 'Sala de Reuniones', 'connections': ['Escritorio', 'Recepción']},
+                        {'name': 'Cafetería', 'connections': ['Escritorio', 'Estacionamiento']},
+                        {'name': 'Recepción', 'connections': ['Sala de Reuniones', 'Estacionamiento']},
+                        {'name': 'Estacionamiento', 'connections': ['Cafetería', 'Recepción']}
                     ],
                     'objectives': {
-                        'usuario': 'Mantener tu identidad y datos seguros frente a intentos de engaño.',
+                        'usuario': 'Proteger tus credenciales y datos personales, reportando amenazas sin caer en trampas.',
                         'hacker': 'N/A',
                         'cyberdelincuente': 'N/A'
                     }
                 },
-                # Hacker ético: actividades de protección, respuesta y prevención
+                # HACKER ÉTICO: Defensor de la empresa
                 {
                     'id': 'hacker_empresa',
-                    'name': 'Defensa y Respuesta en la Empresa',
-                    'context': 'Como profesional de ciberseguridad, tu misión es proteger la infraestructura, corregir errores de compañeros y anticipar ataques, implementando controles y educando a usuarios.',
+                    'name': 'Defensa Activa Corporativa',
+                    'context': 'Como analista de seguridad, debes detectar amenazas en tiempo real, corregir vulnerabilidades, educar a empleados y responder a incidentes antes de que escalen.',
                     'locations': [
-                        {'name': 'SOC', 'connections': ['Oficina TI', 'Sala de Servidores']},
-                        {'name': 'Oficina TI', 'connections': ['SOC', 'Puestos de Trabajo']},
-                        {'name': 'Puestos de Trabajo', 'connections': ['Oficina TI', 'Recepción']},
-                        {'name': 'Recepción', 'connections': ['Puestos de Trabajo', 'Sala de Servidores']},
-                        {'name': 'Sala de Servidores', 'connections': ['SOC', 'Recepción']}
+                        {'name': 'SOC (Centro de Operaciones)', 'connections': ['Sala de Servidores', 'Oficina TI']},
+                        {'name': 'Sala de Servidores', 'connections': ['SOC (Centro de Operaciones)', 'Área de Empleados']},
+                        {'name': 'Oficina TI', 'connections': ['SOC (Centro de Operaciones)', 'Área de Empleados']},
+                        {'name': 'Área de Empleados', 'connections': ['Oficina TI', 'Sala de Servidores']},
+                        {'name': 'Perímetro de Red', 'connections': ['SOC (Centro de Operaciones)', 'Sala de Servidores']}
                     ],
                     'objectives': {
                         'usuario': 'N/A',
-                        'hacker': 'Detectar, mitigar y prevenir incidentes de seguridad en la empresa, corrigiendo errores y educando a los empleados.',
+                        'hacker': 'Prevenir brechas de seguridad, detectar actividad maliciosa y responder efectivamente a incidentes.',
                         'cyberdelincuente': 'N/A'
                     }
                 },
-                # Ciberdelincuente: actividades ofensivas, simulando ataques
+                # CIBERDELINCUENTE: Atacante externo
                 {
                     'id': 'ciberdelincuente_ataque',
-                    'name': 'Campaña de Ataque a la Empresa',
-                    'context': 'Como hacker externo, tu objetivo es comprometer la empresa usando phishing, USBs maliciosos, ingeniería social y técnicas avanzadas para evadir defensas.',
+                    'name': 'Operación de Intrusión Corporativa',
+                    'context': 'Como atacante externo, tu objetivo es comprometer la empresa mediante phishing dirigido, exploits, ingeniería social y evasión de controles de seguridad.',
                     'locations': [
-                        {'name': 'Cafetería', 'connections': ['Estacionamiento', 'Oficina Externa']},
-                        {'name': 'Estacionamiento', 'connections': ['Cafetería', 'Recepción']},
-                        {'name': 'Recepción', 'connections': ['Estacionamiento', 'Oficina Externa']},
-                        {'name': 'Oficina Externa', 'connections': ['Cafetería', 'Recepción']}
+                        {'name': 'Infraestructura Externa', 'connections': ['Perímetro WiFi', 'Zona de Reconocimiento']},
+                        {'name': 'Perímetro WiFi', 'connections': ['Infraestructura Externa', 'Punto de Acceso Físico']},
+                        {'name': 'Zona de Reconocimiento', 'connections': ['Infraestructura Externa', 'Punto de Acceso Físico']},
+                        {'name': 'Punto de Acceso Físico', 'connections': ['Perímetro WiFi', 'Zona de Reconocimiento']},
+                        {'name': 'Red Comprometida', 'connections': ['Punto de Acceso Físico', 'Infraestructura Externa']}
                     ],
                     'objectives': {
                         'usuario': 'N/A',
                         'hacker': 'N/A',
-                        'cyberdelincuente': 'Comprometer la empresa mediante técnicas de ataque y obtener acceso a información sensible.'
+                        'cyberdelincuente': 'Obtener acceso inicial, escalar privilegios y exfiltrar información valiosa sin ser detectado.'
                     }
                 }
             ],
-            # Eventos diferenciados por dificultad/personaje
+            
+            # EVENTOS MEJORADOS: Más realistas y específicos
             'events': [
-                # Usuario: eventos de defensa y errores comunes
-                {'text': 'Recibes un correo sospechoso pidiendo tus credenciales.', 'effect': {'alert_level': +1}, 'tags': ['phishing', 'correo', 'usuario']},
-                {'text': 'Encuentras un USB en la sala de descanso.', 'effect': {'pistas': +1}, 'tags': ['usb', 'physical', 'usuario']},
-                {'text': 'Tu compañero te pide tu contraseña para "arreglar" tu PC.', 'effect': {'alert_level': +1}, 'tags': ['social', 'credentials', 'usuario']},
-                {'text': 'Intentas conectarte a la WiFi pública y ves un portal falso.', 'effect': {'alert_level': +2}, 'tags': ['phishing', 'wifi', 'usuario']},
-                # Hacker ético: eventos de protección y respuesta
-                {'text': 'Detectas tráfico inusual en el firewall.', 'effect': {'pistas': +1, 'alert_level': +1}, 'tags': ['logs', 'firewall', 'hacker']},
-                {'text': 'Un empleado conecta un USB no autorizado.', 'effect': {'alert_level': +2}, 'tags': ['usb', 'physical', 'hacker']},
-                {'text': 'Se reporta un intento de phishing masivo a empleados.', 'effect': {'alert_level': +2}, 'tags': ['phishing', 'correo', 'hacker']},
-                {'text': 'Encuentras credenciales escritas en un post-it.', 'effect': {'pistas': +1}, 'tags': ['credentials', 'hacker']},
-                {'text': 'Un servidor muestra actividad de ransomware.', 'effect': {'alert_level': +3}, 'tags': ['ransomware', 'hacker']},
-                # Ciberdelincuente: eventos ofensivos
-                {'text': 'Preparas un correo de phishing suplantando a un directivo.', 'effect': {'pistas': +1}, 'tags': ['phishing', 'correo', 'cyberdelincuente']},
-                {'text': 'Dejas un USB malicioso en el estacionamiento.', 'effect': {'pistas': +1}, 'tags': ['usb', 'physical', 'cyberdelincuente']},
-                {'text': 'Obtienes acceso a una cuenta débil tras un ataque de diccionario.', 'effect': {'alert_level': +1}, 'tags': ['credentials', 'bruteforce', 'cyberdelincuente']},
-                {'text': 'Logras evadir el firewall y exfiltrar datos.', 'effect': {'pistas': +2, 'alert_level': +2}, 'tags': ['exfiltration', 'firewall', 'cyberdelincuente']},
-                {'text': 'Simulas una llamada de soporte para obtener acceso remoto.', 'effect': {'alert_level': +1}, 'tags': ['vishing', 'cyberdelincuente']}
+                # === EVENTOS DE USUARIO ===
+                {'text': 'Recibes un correo urgente del "CEO" pidiendo transferir fondos inmediatamente', 
+                 'effect': {'alert_level': +2}, 'tags': ['phishing', 'correo', 'urgencia', 'usuario'], 'severity': 'high'},
+                
+                {'text': 'Encuentras una memoria USB con etiqueta "Nóminas 2024" en el baño', 
+                 'effect': {'pistas': +1}, 'tags': ['usb', 'physical', 'usuario'], 'severity': 'medium'},
+                
+                {'text': 'Un "técnico de soporte" llama pidiendo tu contraseña para "mantenimiento del sistema"', 
+                 'effect': {'alert_level': +2}, 'tags': ['vishing', 'social', 'credentials', 'usuario'], 'severity': 'high'},
+                
+                {'text': 'Tu navegador muestra una alerta de seguridad de "Microsoft" pidiendo instalar una actualización urgente', 
+                 'effect': {'alert_level': +1}, 'tags': ['phishing', 'malware', 'usuario'], 'severity': 'medium'},
+                
+                {'text': 'Recibes un mensaje de LinkedIn de un reclutador con un "test de habilidades" adjunto', 
+                 'effect': {'pistas': +1}, 'tags': ['phishing', 'social', 'adjunto', 'usuario'], 'severity': 'medium'},
+                
+                {'text': 'Tu jefe te pide por WhatsApp compartir el acceso VPN "solo por hoy"', 
+                 'effect': {'alert_level': +1}, 'tags': ['social', 'credentials', 'usuario'], 'severity': 'high'},
+                
+                # === EVENTOS DE HACKER ÉTICO ===
+                {'text': 'El IDS detecta 50+ intentos de login fallidos desde una IP en Rusia en los últimos 5 minutos', 
+                 'effect': {'alert_level': +2, 'pistas': +1}, 'tags': ['bruteforce', 'logs', 'detection', 'hacker'], 'severity': 'high'},
+                
+                {'text': 'Un empleado de finanzas reporta que no puede acceder a sus archivos; todos tienen extensión .locked', 
+                 'effect': {'alert_level': +3}, 'tags': ['ransomware', 'incident', 'hacker'], 'severity': 'critical'},
+                
+                {'text': 'Notas tráfico saliente masivo (2GB) desde una estación de trabajo a las 3 AM', 
+                 'effect': {'alert_level': +2, 'pistas': +2}, 'tags': ['exfiltration', 'logs', 'anomaly', 'hacker'], 'severity': 'critical'},
+                
+                {'text': 'El escáner de vulnerabilidades reporta un servidor con SMBv1 activo y puertos administrativos expuestos', 
+                 'effect': {'pistas': +1}, 'tags': ['vulnerability', 'scan', 'hacker'], 'severity': 'medium'},
+                
+                {'text': 'Recibes 20 tickets de empleados que cayeron en el mismo correo de phishing', 
+                 'effect': {'alert_level': +2}, 'tags': ['phishing', 'incident', 'response', 'hacker'], 'severity': 'high'},
+                
+                {'text': 'Encuentras un script PowerShell sospechoso programado en el Inicio de un servidor crítico', 
+                 'effect': {'alert_level': +2, 'pistas': +1}, 'tags': ['malware', 'persistence', 'forensics', 'hacker'], 'severity': 'high'},
+                
+                {'text': 'Un empleado conectó su laptop personal a la red corporativa sin autorización', 
+                 'effect': {'alert_level': +1}, 'tags': ['policy', 'physical', 'hacker'], 'severity': 'low'},
+                
+                # === EVENTOS DE CIBERDELINCUENTE ===
+                {'text': 'Consigues un listado de 200 emails corporativos mediante scraping de LinkedIn', 
+                 'effect': {'pistas': +1}, 'tags': ['recon', 'osint', 'cyberdelincuente'], 'severity': 'low'},
+                
+                {'text': 'Detectas un servidor web desactualizado con vulnerabilidad de RCE sin parchear', 
+                 'effect': {'pistas': +2}, 'tags': ['vulnerability', 'exploit', 'cyberdelincuente'], 'severity': 'high'},
+                
+                {'text': 'Clonas el portal de Office365 de la empresa para capturar credenciales', 
+                 'effect': {'pistas': +1}, 'tags': ['phishing', 'clone', 'credentials', 'cyberdelincuente'], 'severity': 'medium'},
+                
+                {'text': 'Logras acceso inicial mediante una cuenta de practicante con contraseña débil (usuario:123456)', 
+                 'effect': {'alert_level': +1, 'compromised_hosts': +1}, 'tags': ['bruteforce', 'credentials', 'cyberdelincuente'], 'severity': 'high'},
+                
+                {'text': 'Despliegas un USB con payload Rubber Ducky en el estacionamiento de la empresa', 
+                 'effect': {'pistas': +1}, 'tags': ['usb', 'physical', 'payload', 'cyberdelincuente'], 'severity': 'medium'},
+                
+                {'text': 'Identificas backups sin cifrar accesibles desde la red interna', 
+                 'effect': {'pistas': +2}, 'tags': ['recon', 'data', 'cyberdelincuente'], 'severity': 'high'},
+                
+                {'text': 'Consigues moverte lateralmente a un controlador de dominio mediante Pass-the-Hash', 
+                 'effect': {'alert_level': +2, 'compromised_hosts': +1}, 'tags': ['lateral', 'privilege', 'cyberdelincuente'], 'severity': 'critical'},
             ],
+            
             'consequences': [
-                'Se generaron logs que indican acceso no autorizado.',
-                'Se activó una alerta y el equipo de respuesta se moviliza.',
-                'Se pudo contener una exfiltración parcial.',
-                'El atacante consiguió persistencia en un host.',
-                'La campaña de phishing obtuvo algunas credenciales débiles.',
-                'Se restauraron archivos desde backups.'
+                'Se generaron alertas en el SIEM que indican acceso no autorizado.',
+                'El equipo de respuesta a incidentes inició protocolo de contención.',
+                'Se logró detener una exfiltración de datos a tiempo.',
+                'El atacante estableció persistencia mediante un backdoor.',
+                'Varios empleados comprometieron credenciales corporativas.',
+                'Se activó el plan de recuperación de desastres.',
+                'Forense digital confirmó compromiso de múltiples sistemas.',
+                'Se notificó al equipo legal sobre posible brecha de datos.'
             ]
         }
-    def _generate_options(self,
-                          character_type: str,
-                          stage: int,
-                          total_stages: int,
-                          scenario: Dict[str, Any],
-                          location: str,
-                          event: Dict[str, Any],
-                          state: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Devuelve exactamente 3 opciones contextuales relacionadas con el event.tags, sin repetir texto."""
-        # Determinar fase (early/mid/late)
+
+    def _create_thread(self, scenario: Dict[str, Any], character_type: str) -> Tuple[str, str, str]:
+        """Crea narrativa base coherente por personaje."""
+        base_goal = scenario['objectives'].get(character_type, 'N/A')
+        
+        if character_type == 'usuario':
+            goal = base_goal
+            key_item = 'Token de autenticación MFA y conocimiento de políticas de seguridad'
+            antagonist = 'Campaña de phishing dirigido y ataques de ingeniería social'
+            
+        elif character_type == 'hacker':
+            goal = base_goal
+            key_item = 'Acceso a logs, herramientas de análisis forense y autoridad para aislar sistemas'
+            antagonist = 'Atacante APT persistente explotando errores humanos y configuraciones débiles'
+            
+        else:  # cyberdelincuente
+            goal = base_goal
+            key_item = 'Infraestructura de comando y control (C2) y arsenal de exploits'
+            antagonist = 'Equipo de respuesta a incidentes y controles de seguridad multicapa'
+            
+        return goal, antagonist, key_item
+
+    def _choose_event_by_state(self, state: Dict[str, Any], stage_num: int = 0) -> Dict[str, Any]:
+        """Selecciona eventos coherentes con el estado actual y fase narrativa."""
+        events = self.story_templates['events']
+        character = self.current_story.get('character', 'usuario') if self.current_story else 'usuario'
+        
+        # Mapeo de caracteres para asegurar consistencia
+        char_tag_map = {
+            'usuario': 'usuario',
+            'hacker': 'hacker',
+            'cyberdelincuente': 'cyberdelincuente'
+        }
+        char_tag = char_tag_map.get(character, 'usuario')
+        
+        # Filtrar por personaje
+        relevant_events = [e for e in events if char_tag in e.get('tags', [])]
+        if not relevant_events:
+            # Si no hay eventos específicos, usar todos como fallback
+            relevant_events = events
+            print(f"⚠️ Warning: No se encontraron eventos para '{character}', usando todos los eventos.")
+        
+        # Sistema de pesos basado en contexto
+        weighted = []
+        alert = state.get('alert_level', 0)
+        pistas = state.get('pistas', 0)
+        compromised = state.get('compromised_hosts', 0)
+        
+        # Determinar fase narrativa
+        if not self.current_story or not self.current_story.get('stages'):
+            total_stages = 6  # default
+        else:
+            total_stages = len(self.current_story.get('stages', []))
+        
+        fraction = stage_num / max(1, total_stages - 1) if total_stages > 1 else 0
+        
+        for event in relevant_events:
+            weight = 1
+            severity = event.get('severity', 'medium')
+            tags = event.get('tags', [])
+            
+            # FASE EARLY (0-33%): Introducción y reconocimiento
+            if fraction < 0.33:
+                if 'recon' in tags or 'osint' in tags:
+                    weight = 4
+                elif 'phishing' in tags or 'social' in tags:
+                    weight = 3
+                elif severity == 'low' or severity == 'medium':
+                    weight = 2
+                    
+            # FASE MID (33-66%): Escalada y acción
+            elif fraction < 0.66:
+                if 'exploit' in tags or 'lateral' in tags or 'incident' in tags:
+                    weight = 4
+                elif 'malware' in tags or 'vulnerability' in tags:
+                    weight = 3
+                elif severity == 'medium' or severity == 'high':
+                    weight = 2
+                    
+            # FASE LATE (66-100%): Clímax y resolución
+            else:
+                if 'ransomware' in tags or 'exfiltration' in tags or 'critical' in tags:
+                    weight = 4
+                elif 'privilege' in tags or 'persistence' in tags:
+                    weight = 3
+                elif severity == 'high' or severity == 'critical':
+                    weight = 2
+            
+            # Ajustes por estado actual
+            if alert >= 3 and severity == 'critical':
+                weight *= 2
+            if alert == 0 and severity == 'low':
+                weight *= 2
+            if pistas == 0 and 'pistas' in str(event.get('effect', {})):
+                weight *= 1.5
+            if compromised > 0 and ('forensics' in tags or 'response' in tags):
+                weight *= 1.5
+                
+            weighted.extend([event] * int(weight))
+        
+        # Asegurar que weighted no esté vacío
+        if not weighted:
+            print(f"⚠️ Warning: No hay eventos ponderados para '{character}', usando evento aleatorio.")
+            return random.choice(relevant_events) if relevant_events else random.choice(events)
+        
+        return random.choice(weighted)
+
+    def _choose_location(self, current_location: str, scenario: Dict[str, Any]) -> str:
+        """Elige siguiente ubicación con preferencia por conexiones lógicas."""
+        loc_map = {loc['name']: loc for loc in scenario['locations']}
+        
+        if current_location not in loc_map:
+            return scenario['locations'][0]['name']
+        
+        connections = loc_map[current_location]['connections']
+        if not connections:
+            return random.choice([loc['name'] for loc in scenario['locations']])
+        
+        # 90% de probabilidad de moverse a ubicación conectada
+        return random.choice(connections) if random.random() < 0.9 else random.choice([loc['name'] for loc in scenario['locations']])
+
+    def _apply_event_effects(self, state: Dict[str, Any], event: Dict[str, Any]) -> Dict[str, Any]:
+        """Aplica efectos de eventos al estado."""
+        new_state = state.copy()
+        effect = event.get('effect', {}) or {}
+        
+        for key, delta in effect.items():
+            if key in new_state and isinstance(new_state[key], int):
+                new_state[key] = max(0, new_state[key] + int(delta))
+            else:
+                new_state[key] = delta
+                
+        return new_state
+
+    def _apply_option_effects(self, state: Dict[str, Any], option: Dict[str, Any], success: bool) -> Dict[str, Any]:
+        """Aplica efectos de decisión del jugador."""
+        new_state = state.copy()
+        effects = option.get('effect_on_state', {}) or {}
+        
+        if isinstance(effects, dict) and ('success' in effects or 'failure' in effects):
+            chosen_effect = effects.get('success' if success else 'failure', {})
+        else:
+            chosen_effect = effects
+        
+        for key, delta in chosen_effect.items():
+            if key in new_state and isinstance(new_state[key], int):
+                new_state[key] = max(0, new_state[key] + int(delta))
+            else:
+                new_state[key] = chosen_effect[key]
+                
+        return new_state
+
+    def _generate_description(self, scenario: Dict[str, Any], location: str, event: Dict[str, Any], 
+                            stage_num: int, state: Dict[str, Any], goal: str, antagonist: str, 
+                            key_item: str, show_objective: bool = False) -> str:
+        """Genera descripción narrativa contextual con memoria de eventos previos."""
+        parts = []
+        
+        # Ubicación actual
+        parts.append(f"📍 **{location}**")
+        
+        # Evento principal con contexto
+        parts.append(f"\n{event['text']}")
+        
+        # Información de estado crítico
+        alert = state.get('alert_level', 0)
+        if alert >= 3:
+            parts.append("\n⚠️ **ALERTA CRÍTICA**: La situación requiere acción inmediata para evitar daños mayores.")
+        elif alert == 2:
+            parts.append("\n⚠️ **Alerta Alta**: Actividad sospechosa confirmada. Procede con cautela.")
+        elif alert == 1:
+            parts.append("\n⚡ Vigilancia aumentada: Se detectaron anomalías menores.")
+        
+        # Pistas acumuladas
+        pistas = state.get('pistas', 0)
+        if pistas >= 3:
+            parts.append(f"\n🔍 Tienes evidencia sólida ({pistas} indicadores) para tomar decisiones informadas.")
+        elif pistas > 0:
+            parts.append(f"\n🔍 Has reunido {pistas} pista(s) que pueden ser útiles.")
+        
+        # Objetivo (solo al inicio)
+        if show_objective:
+            parts.append(f"\n🎯 **Objetivo**: {goal}")
+        
+        # Memoria narrativa (referencia a eventos pasados para coherencia)
+        if len(self.narrative_memory) > 0 and stage_num > 0:
+            last_event = self.narrative_memory[-1]
+            if 'phishing' in last_event and 'phishing' in event.get('tags', []):
+                parts.append("\n💭 Este incidente parece relacionado con la campaña anterior...")
+        
+        parts.append("\n\n**¿Cuál es tu siguiente movimiento?**")
+        
+        return "".join(parts)
+
+    def _base_options_catalog(self) -> Dict[str, Dict[str, List[Dict[str, Any]]]]:
+        """Catálogo optimizado de opciones con mayor realismo y variedad."""
+        return {
+            'usuario': {
+                'early': [
+                    {
+                        'text': 'Verificar remitente (header completo), no abrir enlaces y reportar a seguridad',
+                        'tags': ['phishing', 'correo', 'urgencia'],
+                        'risk': 'bajo', 'time': 1, 'success': 90,
+                        'effect_on_state': {'success': {'pistas': +1, 'alert_level': -1}, 'failure': {'alert_level': +1}},
+                        'outcome_text': {
+                            'success': 'Reportaste el correo. El equipo de seguridad confirmó que era phishing y bloqueó al remitente.',
+                            'failure': 'Tu reporte llegó tarde y otros empleados ya abrieron el enlace malicioso.'
+                        }
+                    },
+                    {
+                        'text': 'Llamar directamente al supuesto remitente para confirmar autenticidad',
+                        'tags': ['phishing', 'correo', 'social', 'urgencia'],
+                        'risk': 'bajo', 'time': 2, 'success': 85,
+                        'effect_on_state': {'success': {'pistas': +1}, 'failure': {}},
+                        'outcome_text': {
+                            'success': 'El remitente confirmó que nunca envió ese correo. Evitaste caer en la trampa.',
+                            'failure': 'No lograste contactarlo a tiempo, pero al menos no abriste el enlace.'
+                        }
+                    },
+                    {
+                        'text': 'Hacer clic en el enlace para verificar si es legítimo',
+                        'tags': ['phishing', 'correo', 'urgencia'],
+                        'risk': 'alto', 'time': 1, 'success': 15,
+                        'effect_on_state': {'success': {}, 'failure': {'alert_level': +3, 'credentials_leaked': +1}},
+                        'outcome_text': {
+                            'success': 'Por suerte era un test de concientización de seguridad (simulacro).',
+                            'failure': 'El enlace instaló malware y envió tus credenciales al atacante. Incidente crítico iniciado.'
+                        }
+                    },
+                ],
+                'mid': [
+                    {
+                        'text': 'Colocar el USB en bolsa antiestática y llevarlo inmediatamente a IT sin conectarlo',
+                        'tags': ['usb', 'physical'],
+                        'risk': 'bajo', 'time': 1, 'success': 95,
+                        'effect_on_state': {'success': {'pistas': +1}, 'failure': {}},
+                        'outcome_text': {
+                            'success': 'IT analizó el USB en sandbox: contenía un payload de ransomware. Evitaste un desastre.',
+                            'failure': 'IT estaba ocupado, pero al menos no lo conectaste.'
+                        }
+                    },
+                    {
+                        'text': 'Conectar el USB en tu equipo "solo para ver qué contiene"',
+                        'tags': ['usb', 'physical'],
+                        'risk': 'crítico', 'time': 1, 'success': 5,
+                        'effect_on_state': {'success': {}, 'failure': {'alert_level': +3, 'compromised_hosts': +1}},
+                        'outcome_text': {
+                            'success': 'Increíblemente, el USB solo tenía documentos vacíos.',
+                            'failure': 'El USB ejecutó un script que cifró tus archivos y se propagó por la red. Ransomware detectado.'
+                        }
+                    },
+                    {
+                        'text': 'Cambiar todas tus contraseñas y activar autenticación multifactor (MFA)',
+                        'tags': ['credentials', 'mfa', 'phishing'],
+                        'risk': 'bajo', 'time': 2, 'success': 90,
+                        'effect_on_state': {'success': {'credentials_leaked': -1, 'alert_level': -1}, 'failure': {}},
+                        'outcome_text': {
+                            'success': 'Actualizaste tus credenciales y configuraste MFA. Ahora estás mucho más protegido.',
+                            'failure': 'Algunos servicios no permitieron el cambio inmediato por políticas corporativas.'
+                        }
+                    },
+                ],
+                'late': [
+                    {
+                        'text': 'Rechazar la solicitud educadamente y verificar por canal oficial (email corporativo)',
+                        'tags': ['social', 'credentials', 'vishing'],
+                        'risk': 'bajo', 'time': 1, 'success': 90,
+                        'effect_on_state': {'success': {'pistas': +1}, 'failure': {}},
+                        'outcome_text': {
+                            'success': 'Tu jefe confirmó que nunca solicitó eso. Era un intento de suplantación.',
+                            'failure': 'Tu jefe no respondió de inmediato, pero al menos no compartiste credenciales.'
+                        }
+                    },
+                    {
+                        'text': 'Desconectar tu equipo de la red y llamar a IT inmediatamente',
+                        'tags': ['incident', 'malware', 'response'],
+                        'risk': 'bajo', 'time': 1, 'success': 85,
+                        'effect_on_state': {'success': {'compromised_hosts': -1, 'alert_level': +1}, 'failure': {}},
+                        'outcome_text': {
+                            'success': 'Aislaste el problema a tiempo. IT inició análisis forense de tu equipo.',
+                            'failure': 'IT llegó tarde pero al menos conteniste el daño desconectando la red.'
+                        }
+                    },
+                ]
+            },
+            
+            'hacker': {
+                'early': [
+                    {
+                        'text': 'Correlacionar logs del firewall, proxy y AD para identificar origen del ataque',
+                        'tags': ['logs', 'detection', 'bruteforce', 'anomaly'],
+                        'risk': 'bajo', 'time': 2, 'success': 85,
+                        'effect_on_state': {'success': {'pistas': +2}, 'failure': {'alert_level': +1}},
+                        'outcome_text': {
+                            'success': 'Identificaste la IP atacante y patrones de ataque. Procedes a bloquear y alertar.',
+                            'failure': 'Los logs estaban fragmentados. Necesitas más tiempo o herramientas adicionales.'
+                        }
+                    },
+                    {
+                        'text': 'Implementar bloqueo IP inmediato en firewall y activar rate limiting',
+                        'tags': ['firewall', 'bruteforce', 'mitigation'],
+                        'risk': 'bajo', 'time': 1, 'success': 90,
+                        'effect_on_state': {'success': {'alert_level': -1}, 'failure': {}},
+                        'outcome_text': {
+                            'success': 'Bloqueaste la IP y los intentos cesaron. Éxito táctico.',
+                            'failure': 'El atacante cambió de IP. Necesitas estrategia más robusta.'
+                        }
+                    },
+                    {
+                        'text': 'Escanear la red completa en busca de otros indicadores de compromiso (IOCs)',
+                        'tags': ['scan', 'detection', 'forensics'],
+                        'risk': 'medio', 'time': 3, 'success': 75,
+                        'effect_on_state': {'success': {'pistas': +2, 'compromised_hosts': +1}, 'failure': {}},
+                        'outcome_text': {
+                            'success': 'Detectaste 2 hosts adicionales ya comprometidos. Ahora sabes la magnitud del problema.',
+                            'failure': 'El escaneo no encontró más evidencia, pero consumió recursos valiosos.'
+                        }
+                    },
+                ],
+                'mid': [
+                    {
+                        'text': 'Aislar red de finanzas y ejecutar análisis forense en el sistema afectado',
+                        'tags': ['ransomware', 'incident', 'forensics', 'response'],
+                        'risk': 'medio', 'time': 2, 'success': 80,
+                        'effect_on_state': {'success': {'compromised_hosts': -1, 'pistas': +1}, 'failure': {'alert_level': +2}},
+                        'outcome_text': {
+                            'success': 'Contuviste el ransomware a tiempo. Forense reveló el vector de entrada.',
+                            'failure': 'El aislamiento fue lento y el ransomware se propagó a 3 sistemas más.'
+                        }
+                    },
+                    {
+                        'text': 'Restaurar desde backup más reciente y validar integridad de archivos',
+                        'tags': ['ransomware', 'backup', 'recovery'],
+                        'risk': 'bajo', 'time': 3, 'success': 85,
+                        'effect_on_state': {'success': {'compromised_hosts': -1}, 'failure': {'alert_level': +1}},
+                        'outcome_text': {
+                            'success': 'Restauración exitosa. Sistema operativo en 2 horas. Crisis evitada.',
+                            'failure': 'El backup estaba corrupto parcialmente. Se perdieron datos de 48hrs.'
+                        }
+                    },
+                    {
+                        'text': 'Bloquear exfiltración mediante reglas DLP y alertar al equipo legal',
+                        'tags': ['exfiltration', 'logs', 'anomaly'],
+                        'risk': 'medio', 'time': 2, 'success': 75,
+                        'effect_on_state': {'success': {'pistas': +1, 'alert_level': -1}, 'failure': {'alert_level': +1}},
+                        'outcome_text': {
+                            'success': 'Bloqueaste la transferencia de datos. Se exfiltraron solo 200MB de 2GB planeados.',
+                            'failure': 'La exfiltración se completó antes de que actuaras. Forense determinará el daño.'
+                        }
+                    },
+                ],
+                'late': [
+                    {
+                        'text': 'Revocar credenciales comprometidas masivamente y forzar reset de contraseñas',
+                        'tags': ['credentials', 'incident', 'response', 'phishing'],
+                        'risk': 'bajo', 'time': 2, 'success': 85,
+                        'effect_on_state': {'success': {'credentials_leaked': -2, 'alert_level': -1}, 'failure': {}},
+                        'outcome_text': {
+                            'success': 'Revocaste 47 credenciales comprometidas. El atacante perdió acceso.',
+                            'failure': 'La revocación fue parcial. Algunas cuentas de servicio quedaron expuestas.'
+                        }
+                    },
+                    {
+                        'text': 'Implementar detección EDR en todos los endpoints y configurar alertas ML',
+                        'tags': ['malware', 'persistence', 'detection'],
+                        'risk': 'bajo', 'time': 3, 'success': 80,
+                        'effect_on_state': {'success': {'pistas': +1, 'alert_level': -1}, 'failure': {}},
+                        'outcome_text': {
+                            'success': 'EDR detectó 3 backdoors activos que pasaron desapercibidos. Ahora puedes neutralizarlos.',
+                            'failure': 'El despliegue de EDR causó falsos positivos que saturaron al equipo.'
+                        }
+                    },
+                    {
+                        'text': 'Generar informe ejecutivo del incidente y coordinar comunicación con stakeholders',
+                        'tags': ['incident', 'response', 'communication'],
+                        'risk': 'bajo', 'time': 2, 'success': 75,
+                        'effect_on_state': {'success': {}, 'failure': {}},
+                        'outcome_text': {
+                            'success': 'El informe tranquilizó a la dirección y se aprobó presupuesto para mejoras.',
+                            'failure': 'La comunicación fue confusa y generó pánico innecesario en la organización.'
+                        }
+                    },
+                ]
+            },
+            
+            'cyberdelincuente': {
+                'early': [
+                    {
+                        'text': 'Crear campaña de spear-phishing dirigida a ejecutivos con pretexto convincente',
+                        'tags': ['phishing', 'spear', 'recon', 'social'],
+                        'risk': 'medio', 'time': 2, 'success': 65,
+                        'effect_on_state': {'success': {'credentials_leaked': +1, 'pistas': +1}, 'failure': {'alert_level': +1}},
+                        'outcome_text': {
+                            'success': '3 ejecutivos abrieron tu email y 1 entregó credenciales. Acceso inicial conseguido.',
+                            'failure': 'El filtro anti-spam bloqueó tu campaña. Debes cambiar de estrategia.'
+                        }
+                    },
+                    {
+                        'text': 'Realizar reconocimiento pasivo mediante OSINT y scraping de redes sociales',
+                        'tags': ['recon', 'osint'],
+                        'risk': 'bajo', 'time': 1, 'success': 90,
+                        'effect_on_state': {'success': {'pistas': +2}, 'failure': {}},
+                        'outcome_text': {
+                            'success': 'Recopilaste organigramas, emails, tecnologías usadas y nombres de empleados clave.',
+                            'failure': 'La información pública era limitada. Necesitas técnicas más agresivas.'
+                        }
+                    },
+                    {
+                        'text': 'Escanear perímetro en busca de servicios expuestos y vulnerabilidades conocidas',
+                        'tags': ['recon', 'scan', 'vulnerability'],
+                        'risk': 'medio', 'time': 2, 'success': 70,
+                        'effect_on_state': {'success': {'pistas': +2}, 'failure': {'alert_level': +1}},
+                        'outcome_text': {
+                            'success': 'Encontraste un servidor Tomcat desactualizado con CVE-2021-42013 explotable.',
+                            'failure': 'Tu escaneo fue detectado por el IDS. Ahora están alerta.'
+                        }
+                    },
+                ],
+                'mid': [
+                    {
+                        'text': 'Explotar vulnerabilidad detectada para obtener shell reverso en servidor web',
+                        'tags': ['exploit', 'vulnerability', 'rce'],
+                        'risk': 'alto', 'time': 2, 'success': 70,
+                        'effect_on_state': {'success': {'compromised_hosts': +1, 'alert_level': +1}, 'failure': {'alert_level': +2}},
+                        'outcome_text': {
+                            'success': 'Conseguiste shell con privilegios de www-data. Ahora puedes escalar.',
+                            'failure': 'El exploit falló y generó logs. El equipo de seguridad está investigando.'
+                        }
+                    },
+                    {
+                        'text': 'Realizar movimiento lateral usando Pass-the-Hash con credenciales robadas',
+                        'tags': ['lateral', 'credentials', 'privilege'],
+                        'risk': 'alto', 'time': 2, 'success': 60,
+                        'effect_on_state': {'success': {'compromised_hosts': +1, 'pistas': +1}, 'failure': {'alert_level': +2}},
+                        'outcome_text': {
+                            'success': 'Accediste a 3 sistemas adicionales incluyendo un servidor de archivos.',
+                            'failure': 'La autenticación falló. Parece que rotaron las credenciales.'
+                        }
+                    },
+                    {
+                        'text': 'Instalar beacon de Cobalt Strike para persistencia y comando y control',
+                        'tags': ['persistence', 'backdoor', 'c2'],
+                        'risk': 'alto', 'time': 2, 'success': 65,
+                        'effect_on_state': {'success': {'tiene_objeto_clave': True}, 'failure': {'alert_level': +2}},
+                        'outcome_text': {
+                            'success': 'Beacon instalado y comunicándose cada 5 minutos. Tienes acceso persistente.',
+                            'failure': 'El antivirus detectó y eliminó el beacon. Perdiste el acceso.'
+                        }
+                    },
+                    {
+                        'text': 'Desplegar USB con Rubber Ducky en áreas comunes de la empresa',
+                        'tags': ['usb', 'physical', 'payload'],
+                        'risk': 'medio', 'time': 3, 'success': 50,
+                        'effect_on_state': {'success': {'compromised_hosts': +1}, 'failure': {'alert_level': +1}},
+                        'outcome_text': {
+                            'success': 'Un empleado conectó el USB. Tienes shell en su equipo.',
+                            'failure': 'Seguridad física recogió el USB antes de que alguien lo conectara.'
+                        }
+                    },
+                ],
+                'late': [
+                    {
+                        'text': 'Escalar privilegios a Domain Admin mediante vulnerabilidad Zerologon',
+                        'tags': ['privilege', 'exploit', 'lateral'],
+                        'risk': 'crítico', 'time': 2, 'success': 55,
+                        'effect_on_state': {'success': {'compromised_hosts': +2, 'pistas': +2}, 'failure': {'alert_level': +3}},
+                        'outcome_text': {
+                            'success': 'Conseguiste privilegios de Domain Admin. Control total de la red.',
+                            'failure': 'El exploit falló y generó alertas críticas. Respuesta a incidentes activada.'
+                        }
+                    },
+                    {
+                        'text': 'Exfiltrar base de datos de clientes y cifrar servidores para pedir rescate',
+                        'tags': ['exfiltration', 'ransomware', 'data'],
+                        'risk': 'crítico', 'time': 3, 'success': 60,
+                        'effect_on_state': {'success': {'credentials_leaked': +3, 'compromised_hosts': +2}, 'failure': {'alert_level': +3}},
+                        'outcome_text': {
+                            'success': 'Exfiltraste 50GB de datos sensibles y cifraste 30 servidores. Doble extorsión exitosa.',
+                            'failure': 'DLP bloqueó la exfiltración y EDR detuvo el ransomware. Operación fallida.'
+                        }
+                    },
+                    {
+                        'text': 'Borrar logs de eventos y desactivar soluciones de seguridad antes de salir',
+                        'tags': ['cleanup', 'logs', 'evasion'],
+                        'risk': 'medio', 'time': 2, 'success': 55,
+                        'effect_on_state': {'success': {'alert_level': -1}, 'failure': {'alert_level': +1}},
+                        'outcome_text': {
+                            'success': 'Limpiaste la mayoría de evidencias. Forense será difícil y costoso.',
+                            'failure': 'Dejaste suficientes rastros para que te identifiquen. El FBI está involucrado.'
+                        }
+                    },
+                    {
+                        'text': 'Vender acceso a la red comprometida en foros de la dark web',
+                        'tags': ['exfiltration', 'credentials', 'monetization'],
+                        'risk': 'medio', 'time': 1, 'success': 70,
+                        'effect_on_state': {'success': {'pistas': +1}, 'failure': {}},
+                        'outcome_text': {
+                            'success': 'Vendiste el acceso por $15,000. Otros actores ahora explotan la red.',
+                            'failure': 'Los compradores eran honeypot de las autoridades. Estás bajo vigilancia.'
+                        }
+                    },
+                ]
+            }
+        }
+
+    def _generate_options(self, character_type: str, stage: int, total_stages: int, 
+                         scenario: Dict[str, Any], location: str, event: Dict[str, Any], 
+                         state: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Genera exactamente 3 opciones contextuales correlacionadas con el evento."""
+        
+        # Determinar fase narrativa
         fraction = stage / max(1, total_stages - 1) if total_stages > 1 else 0
         if fraction < 0.33:
             phase = 'early'
@@ -122,203 +675,337 @@ class StoryGenerator:
             phase = 'mid'
         else:
             phase = 'late'
-
+        
         catalog = self._base_options_catalog()
-        phase_candidates = list(catalog.get(character_type, {}).get(phase, []))
-
-        # obtener tags del evento (si los hay)
+        character_catalog = catalog.get(character_type, {})
+        
+        if not character_catalog:
+            print(f"      ⚠️ No hay catálogo para '{character_type}'")
+            # Crear 3 opciones genéricas de emergencia
+            return [
+                self._create_contextual_generic(['general'], location, character_type)
+                for _ in range(3)
+            ]
+        
+        phase_candidates = list(character_catalog.get(phase, []))
+        
+        if not phase_candidates:
+            print(f"      ⚠️ No hay candidatos para fase '{phase}', buscando en otras fases")
+            # Buscar en todas las fases disponibles
+            for p in ['early', 'mid', 'late']:
+                phase_candidates.extend(character_catalog.get(p, []))
+            
+            if not phase_candidates:
+                print(f"      ⚠️ No hay opciones en el catálogo para '{character_type}', generando genéricas")
+                return [
+                    self._create_contextual_generic(['general'], location, character_type)
+                    for _ in range(3)
+                ]
+        
         event_tags = event.get('tags', []) if isinstance(event, dict) else []
-
-        # 1) Filtrar candidatos que explícitamente tengan al menos un tag en común y tengan texto
-        def tag_match(cand: Dict[str, Any]) -> bool:
-            ctags = cand.get('tags', [])
-            return any(t in ctags for t in event_tags) if ctags and event_tags else False
-
-        filtered = [cand for cand in phase_candidates if tag_match(cand) and 'text' in cand]
-
+        
+        print(f"      Tags del evento: {event_tags}")
+        print(f"      Fase: {phase}, Candidatos disponibles: {len(phase_candidates)}")
+        
+        # Función de matching por tags
+        def tag_match_score(candidate: Dict[str, Any]) -> int:
+            """Calcula score de relevancia entre opción y evento."""
+            ctags = candidate.get('tags', [])
+            if not ctags or not event_tags:
+                return 0
+            
+            # Contar tags en común
+            common_tags = len(set(ctags) & set(event_tags))
+            
+            # Bonus por tags críticos
+            critical_match = any(t in ctags for t in event_tags if t in [
+                'phishing', 'ransomware', 'exfiltration', 'credentials', 'malware'
+            ])
+            
+            return common_tags * 10 + (20 if critical_match else 0)
+        
+        print(f"      Calculando scores de matching...")
+        # Ordenar candidatos por relevancia
+        scored_candidates = [(opt, tag_match_score(opt)) for opt in phase_candidates]
+        scored_candidates.sort(key=lambda x: x[1], reverse=True)
+        
+        print(f"      Scores calculados: {[(i, s) for i, (o, s) in enumerate(scored_candidates[:5])]}")
+        
+        # Filtrar opciones con score > 0
+        filtered = [opt for opt, score in scored_candidates if score > 0]
+        print(f"      Opciones filtradas con score > 0: {len(filtered)}")
+        
         # Si no hay suficientes, buscar en otras fases
         if len(filtered) < 3:
-            other_phases = ['early', 'mid', 'late']
-            for p in other_phases:
-                if p == phase:
+            for other_phase in ['early', 'mid', 'late']:
+                if other_phase == phase:
                     continue
-                extras = list(catalog.get(character_type, {}).get(p, []))
-                for e in extras:
-                    if tag_match(e) and e not in filtered and 'text' in e:
-                        filtered.append(e)
-                    if len(filtered) >= 3:
-                        break
+                    
+                other_candidates = list(catalog.get(character_type, {}).get(other_phase, []))
+                other_scored = [(opt, tag_match_score(opt)) for opt in other_candidates]
+                other_scored.sort(key=lambda x: x[1], reverse=True)
+                
+                for opt, score in other_scored:
+                    if score > 0 and opt not in filtered:
+                        filtered.append(opt)
+                        if len(filtered) >= 3:
+                            break
+                            
                 if len(filtered) >= 3:
                     break
-
-        # Si siguen faltando, crear opciones genéricas estrictamente relacionadas con el evento, asegurando textos únicos
-        generic_count = 1
-        while len(filtered) < 3:
-            primary_tag = event_tags[0] if event_tags else None
-            if primary_tag in ('usb', 'physical'):
-                base_text = f'No manipular dispositivos externos y reportar a IT desde {location}.'
-                generic = {
-                    'text': base_text,
-                    'tags': ['usb', 'physical'],
-                    'risk': 'bajo', 'time': 1, 'success': 95,
-                    'effect_on_state': {'success': {}, 'failure': {'alert_level': +1}},
-                    'outcome_text': {'success': 'IT recibió el USB y lo analizó.', 'failure': 'IT no respondió a tiempo.'}
-                }
-            elif primary_tag in ('phishing', 'links', 'correo'):
-                base_text = f'No abrir enlaces del remitente y reportar desde {location}.'
-                generic = {
-                    'text': base_text,
-                    'tags': ['phishing'],
-                    'risk': 'bajo', 'time': 1, 'success': 90,
-                    'effect_on_state': {'success': {'pistas': +1}, 'failure': {'alert_level': +1}},
-                    'outcome_text': {'success': 'Reportaste y se bloqueó al remitente.', 'failure': 'El enlace causó problemas a otros usuarios.'}
-                }
-            elif primary_tag in ('exfiltration', 'database', 'tráfico'):
-                base_text = f'Correlacionar logs y alertar al SOC desde {location}.'
-                generic = {
-                    'text': base_text,
-                    'tags': ['logs', 'exfiltration'],
-                    'risk': 'medio', 'time': 2, 'success': 85,
-                    'effect_on_state': {'success': {'pistas': +1}, 'failure': {'alert_level': +1}},
-                    'outcome_text': {'success': 'Se obtuvieron pistas útiles.', 'failure': 'Faltaron logs para confirmar.'}
-                }
+        
+        # Si aún faltan, crear opciones genéricas contextuales
+        safety_counter = 0
+        max_generic_attempts = 10
+        
+        print(f"      Completando con opciones genéricas si es necesario...")
+        while len(filtered) < 3 and safety_counter < max_generic_attempts:
+            safety_counter += 1
+            print(f"        Intento genérico {safety_counter}/{max_generic_attempts}")
+            
+            generic = self._create_contextual_generic(event_tags, location, character_type)
+            
+            # Verificar que no exista ya (por texto)
+            if not any(opt['text'] == generic['text'] for opt in filtered):
+                filtered.append(generic)
+                print(f"        ✓ Opción genérica agregada ({len(filtered)}/3)")
             else:
-                base_text = f'Reportar la anomalía desde {location} a IT.'
-                generic = {
-                    'text': base_text,
-                    'tags': ['report'],
-                    'risk': 'bajo', 'time': 1, 'success': 85,
-                    'effect_on_state': {'success': {}, 'failure': {'alert_level': +1}},
-                    'outcome_text': {'success': 'IT recibió el reporte.', 'failure': 'IT no respondió a tiempo.'}
+                # Si ya existe, modificar el texto para hacerlo único
+                generic['text'] = f"{generic['text']} (opción {len(filtered)+1})"
+                filtered.append(generic)
+                print(f"        ✓ Opción genérica modificada agregada ({len(filtered)}/3)")
+        
+        print(f"      Total después de genéricas: {len(filtered)}")
+        
+        # Último recurso: si aún no hay 3, completar con opciones muy básicas
+        while len(filtered) < 3:
+            print(f"        ⚠️ Usando fallback para completar ({len(filtered)}/3)")
+            fallback_option = {
+                'text': f'Evaluar situación cuidadosamente desde {location} (alternativa {len(filtered)+1})',
+                'tags': ['general'],
+                'risk': 'medio',
+                'time': 1,
+                'success': 60,
+                'effect_on_state': {'success': {}, 'failure': {'alert_level': +1}},
+                'outcome_text': {
+                    'success': 'Tomaste un momento para analizar antes de actuar.',
+                    'failure': 'Perdiste tiempo valioso evaluando la situación.'
                 }
-            # Si el texto ya existe, hacer único
-            texts_in_filtered = [o['text'] for o in filtered]
-            text = generic['text']
-            while text in texts_in_filtered:
-                generic_count += 1
-                text = f"{base_text} (alternativa {generic_count})"
-            generic['text'] = text
-            filtered.append(generic)
-
-        # Eliminar duplicados por texto (mantener el primero)
-        unique_options = []
-        seen_texts = set()
-        for opt in filtered:
-            t = opt.get('text', None)
-            if t and t not in seen_texts:
-                unique_options.append(opt)
-                seen_texts.add(t)
-            if len(unique_options) >= 3:
-                break
-
-        # Final tweak: asegurar keys
-        for opt in unique_options:
+            }
+            filtered.append(fallback_option)
+        
+        print(f"      ✓ Total final: {len(filtered)} opciones")
+        
+        # Asegurar campos completos
+        for opt in filtered[:3]:
             opt.setdefault('risk', 'medio')
             opt.setdefault('time', 1)
             opt.setdefault('success', 50)
-            opt.setdefault('effect_on_state', {})
-            opt.setdefault('outcome_text', {'success': 'Operación completada.', 'failure': 'Operación fallida.'})
+            opt.setdefault('effect_on_state', {'success': {}, 'failure': {'alert_level': +1}})
+            opt.setdefault('outcome_text', {
+                'success': 'Acción completada exitosamente.',
+                'failure': 'La acción no tuvo el resultado esperado.'
+            })
+        
+        return filtered[:3]
 
-        # Siempre devolver exactamente 3 opciones
-        while len(unique_options) < 3:
-            # Agregar opción genérica de respaldo si por alguna razón faltan
-            fallback = {
-                'text': f'Reportar la situación desde {location} a IT.',
-                'tags': ['report'],
-                'risk': 'bajo', 'time': 1, 'success': 85,
-                'effect_on_state': {'success': {}, 'failure': {'alert_level': +1}},
-                'outcome_text': {'success': 'IT recibió el reporte.', 'failure': 'IT no respondió a tiempo.'}
+    def _create_contextual_generic(self, tags: List[str], location: str, 
+                                   character_type: str) -> Dict[str, Any]:
+        """Crea opción genérica pero contextualmente relevante."""
+        
+        # Diccionarios de respuestas genéricas por tipo de amenaza
+        generic_responses = {
+            'phishing': {
+                'usuario': f'Reportar el correo sospechoso a IT desde {location} sin interactuar',
+                'hacker': f'Analizar headers del correo y bloquear el dominio desde {location}',
+                'cyberdelincuente': f'Registrar dominio similar y preparar infraestructura desde {location}'
+            },
+            'usb': {
+                'usuario': f'Entregar el dispositivo a seguridad sin conectarlo en {location}',
+                'hacker': f'Analizar el dispositivo en sandbox aislado en {location}',
+                'cyberdelincuente': f'Preparar USB con payload y dejarlo en {location}'
+            },
+            'ransomware': {
+                'usuario': f'Desconectar equipo de la red y alertar a IT desde {location}',
+                'hacker': f'Aislar segmento afectado y activar protocolo de recuperación en {location}',
+                'cyberdelincuente': f'Cifrar archivos críticos y dejar nota de rescate en {location}'
+            },
+            'credentials': {
+                'usuario': f'Cambiar contraseñas y activar MFA desde {location}',
+                'hacker': f'Revocar credenciales comprometidas y forzar reset en {location}',
+                'cyberdelincuente': f'Usar credenciales para movimiento lateral desde {location}'
+            },
+            'exfiltration': {
+                'usuario': f'Reportar actividad de red anómala desde {location}',
+                'hacker': f'Bloquear tráfico saliente sospechoso mediante firewall en {location}',
+                'cyberdelincuente': f'Exfiltrar datos cifrados por canal encubierto desde {location}'
             }
-            if fallback['text'] not in seen_texts:
-                unique_options.append(fallback)
-                seen_texts.add(fallback['text'])
-            else:
-                # Si ya existe, modificar el texto para hacerlo único
-                unique_options.append({**fallback, 'text': fallback['text'] + f' (alternativa {len(unique_options)+1})'})
-            if len(unique_options) >= 3:
+        }
+        
+        # Determinar categoría principal
+        main_category = 'phishing'  # default
+        for category in generic_responses.keys():
+            if any(category in tag for tag in tags):
+                main_category = category
                 break
+        
+        text = generic_responses.get(main_category, {}).get(
+            character_type, 
+            f'Evaluar la situación y tomar acción apropiada desde {location}'
+        )
+        
+        return {
+            'text': text,
+            'tags': tags if tags else ['general'],
+            'risk': 'medio',
+            'time': 1,
+            'success': 70,
+            'effect_on_state': {
+                'success': {'pistas': +1},
+                'failure': {'alert_level': +1}
+            },
+            'outcome_text': {
+                'success': 'Tu acción mitigó la situación efectivamente.',
+                'failure': 'La respuesta fue insuficiente o tardía.'
+            }
+        }
 
-        return unique_options
-
-    # (Eliminado el bloque de datos corrupto)
-
-    # -------------------------
-    # Generación de nueva historia
-    # -------------------------
     def generate_new_story(self, character_type: str, seed: Optional[int] = None) -> Dict[str, Any]:
-        """Genera una historia completa y coherente para el personaje dado."""
+        """Genera historia completa y coherente para el personaje especificado."""
+        
         if seed is not None:
             random.seed(seed)
+        
         if character_type not in ('usuario', 'hacker', 'cyberdelincuente'):
             raise ValueError("character_type debe ser 'usuario', 'hacker' o 'cyberdelincuente'")
-
-        # Seleccionar solo escenarios válidos para el personaje
-        valid_scenarios = [s for s in self.story_templates['scenarios'] if s['objectives'].get(character_type, 'N/A') != 'N/A']
-        if not valid_scenarios:
-            raise ValueError(f"No hay escenarios válidos para el personaje {character_type}")
-        scenario = random.choice(valid_scenarios)
+        
+        # Mapeo de personaje a escenario específico
+        scenario_map = {
+            'usuario': 'usuario_oficina',
+            'hacker': 'hacker_empresa',
+            'cyberdelincuente': 'ciberdelincuente_ataque'
+        }
+        
+        # Seleccionar escenario específico para el personaje
+        target_scenario_id = scenario_map.get(character_type)
+        scenario = next(
+            (s for s in self.story_templates['scenarios'] if s['id'] == target_scenario_id),
+            self.story_templates['scenarios'][0]  # fallback
+        )
+        
         goal, antagonist, key_item = self._create_thread(scenario, character_type)
-
-        # Estado persistente que influirá en eventos y descripciones
+        
+        # Debug info
+        print(f"🎮 Generando historia para: {character_type}")
+        print(f"📋 Escenario: {scenario.get('name', 'Sin nombre')}")
+        print(f"🎯 Objetivo: {goal}")
+        
+        # Estado inicial
         state = {
-            'alert_level': 0,           # 0=bajo, 1=medio, 2=alto, 3=crítico
-            'pistas': 0,                # número de pistas recogidas
+            'alert_level': 0,
+            'pistas': 0,
             'tiene_objeto_clave': False,
             'current_location': scenario['locations'][0]['name'],
             'aliados': [],
-            'compromised_hosts': 0,     # número de hosts comprometidos detectados
-            'credentials_leaked': 0     # credenciales potencialmente filtradas
+            'compromised_hosts': 0,
+            'credentials_leaked': 0
         }
-
-        # Número de etapas entre 4 y 6 para mantener historias compactas y coherentes
-        num_stages = random.randint(4, 6)
+        
+        # Generar entre 5-7 etapas para narrativa completa
+        num_stages = random.randint(5, 7)
         story_stages: List[Dict[str, Any]] = []
-
         used_events = set()
-
+        self.narrative_memory = []
+        
         for i in range(num_stages):
-            # elegir locación conectada a la actual (mover ubicación primero para progresión real)
+            print(f"  📍 Generando etapa {i+1}/{num_stages}...")
+            
+            # Mover a nueva ubicación
             location = self._choose_location(state['current_location'], scenario)
             state['current_location'] = location
-
-            # elegir evento coherente con el estado y la fase actual (ahora devuelve evento con tags)
-            # Evitar repetir eventos en la misma historia
+            print(f"    Ubicación: {location}")
+            
+            # Seleccionar evento único
             event = None
             attempts = 0
-            while attempts < 10:
+            max_attempts = 20  # Aumentado para dar más oportunidades
+            
+            # Primero intentar encontrar evento específico del personaje que no se haya usado
+            while attempts < max_attempts:
                 candidate = self._choose_event_by_state(state, stage_num=i)
                 event_id = candidate['text']
-                if event_id not in used_events:
+                candidate_tags = candidate.get('tags', [])
+                
+                # Verificar que el evento sea para el personaje correcto
+                is_correct_character = character_type in candidate_tags
+                is_not_used = event_id not in used_events
+                
+                if is_correct_character and is_not_used:
                     event = candidate
                     used_events.add(event_id)
+                    print(f"    ✓ Evento válido para {character_type}")
                     break
+                elif not is_correct_character:
+                    print(f"    ✗ Evento rechazado: no es para {character_type} (tags: {candidate_tags})")
+                    
                 attempts += 1
+            
             if event is None:
-                # Si no se pudo evitar, usar cualquiera
-                event = self._choose_event_by_state(state, stage_num=i)
-
-            # generar descripción que refiera al estado, objetivo y antagonista
-            description = self._generate_description(scenario, location, event, i, state, goal, antagonist, key_item, show_objective=(i==0))
-
-            # generar opciones según personaje, fase y contexto (location + event + state)
-            options = self._generate_options(character_type, i, num_stages, scenario, location, event, state)
-
-            # Aplicar los efectos del evento al estado (antes de que el jugador elija)
+                print(f"    ⚠️ No se encontró evento único de {character_type} después de {max_attempts} intentos")
+                # Último recurso: usar cualquier evento del personaje, incluso si está repetido
+                candidate = self._choose_event_by_state(state, stage_num=i)
+                if character_type in candidate.get('tags', []):
+                    event = candidate
+                    print(f"    ⚠️ Usando evento repetido pero correcto para {character_type}")
+                else:
+                    # Buscar manualmente un evento del personaje correcto
+                    all_events = self.story_templates['events']
+                    correct_events = [e for e in all_events if character_type in e.get('tags', [])]
+                    if correct_events:
+                        event = random.choice(correct_events)
+                        print(f"    ⚠️ Forzando evento correcto para {character_type}")
+                    else:
+                        event = candidate
+                        print(f"    ❌ ERROR: No hay eventos para {character_type}, usando cualquiera")
+            
+            print(f"    Evento seleccionado: {event['text'][:50]}...")
+            
+            # Guardar en memoria narrativa
+            self.narrative_memory.append(event.get('tags', []))
+            
+            # Generar descripción contextual
+            print(f"    Generando descripción...")
+            description = self._generate_description(
+                scenario, location, event, i, state, 
+                goal, antagonist, key_item, 
+                show_objective=(i == 0)
+            )
+            
+            # Generar opciones correlacionadas
+            print(f"    Generando opciones...")
+            options = self._generate_options(
+                character_type, i, num_stages, 
+                scenario, location, event, state
+            )
+            print(f"    ✓ {len(options)} opciones generadas")
+            
+            # Aplicar efectos del evento
             state = self._apply_event_effects(state, event)
-
-            # Insertar snapshot del estado (útil para debugging o UI)
+            
+            # Crear entrada de etapa
             stage_entry = {
                 'stage': i + 1,
                 'location': location,
                 'event': event,
                 'description': description,
                 'options': options,
-                'state_snapshot': state.copy()
+                'state_snapshot': state.copy(),
+                'results': []
             }
-
+            
             story_stages.append(stage_entry)
-
-        # Guardar historia y preparar control de etapas
+        
+        # Construir historia completa
         self.current_story = {
             'scenario': scenario,
             'stages': story_stages,
@@ -328,522 +1015,127 @@ class StoryGenerator:
             'key_item': key_item,
             'final_state': state.copy()
         }
+        
         self.stage_index = 0
+        
+        print(f"✅ Historia generada exitosamente: {len(story_stages)} etapas")
+        
         return self.current_story
 
-    # -------------------------
-    # Hilo conductor (goal, antagonist, key item)
-    # -------------------------
-    def _create_thread(self, scenario: Dict[str, Any], character_type: str) -> Tuple[str, str, str]:
-        """Crea objetivo concreto, antagonista y objeto clave ligados al escenario y al personaje."""
-        base_goal = scenario['objectives'].get(character_type, 'N/A')
-        # Usuario: defensa personal
-        if character_type == 'usuario':
-            goal = base_goal
-            key_item = 'copia de seguridad local (backup)'
-            antagonist = 'Campaña de Ingeniería Social'
-        # Hacker ético: defensa y respuesta
-        elif character_type == 'hacker':
-            goal = base_goal
-            if scenario['id'] == 'hacker_empresa':
-                key_item = 'Playbook de Respuesta y Kit de Concientización'
-            else:
-                key_item = 'Herramientas de monitoreo y scripts de automatización'
-            antagonist = 'Atacante persistente (APT) y errores humanos'
-        # Ciberdelincuente: ofensiva
-        else:  # cyberdelincuente
-            goal = base_goal
-            if scenario['id'] == 'ciberdelincuente_ataque':
-                key_item = 'USB con payload, plantillas de phishing y exploits'
-            else:
-                key_item = 'Infraestructura de C2 y credenciales robadas'
-            antagonist = 'Equipo de Seguridad y sistemas de defensa'
-        return goal, antagonist, key_item
-
-    # -------------------------
-    # Selección de eventos y locaciones coherentes
-    # -------------------------
-    def _choose_event_by_state(self, state: Dict[str, Any], stage_num: int = 0) -> Dict[str, Any]:
-        """Selecciona un evento relevante según el personaje y la dificultad."""
-        events = self.story_templates['events']
-        character = self.current_story['character'] if hasattr(self, 'current_story') and self.current_story else 'usuario'
-        # Filtrar eventos por tag de personaje
-        relevant_events = [e for e in events if character in e.get('tags', [])]
-        if not relevant_events:
-            relevant_events = events  # fallback
-
-        weighted = []
-        alert = state.get('alert_level', 0)
-        pistas = state.get('pistas', 0)
-
-        # Preferencias por fase narrativa
-        if stage_num < 2:  # early
-            for e in relevant_events:
-                weight = 3 if 'usb' in e['tags'] or 'phishing' in e['tags'] or 'correo' in e['tags'] else 1
-                weighted.extend([e] * weight)
-        elif stage_num < 4:  # mid
-            for e in relevant_events:
-                weight = 2
-                if any(k in e['tags'] for k in ('logs', 'firewall', 'ransomware', 'exfiltration')):
-                    weight = 4
-                weighted.extend([e] * weight)
-        else:  # late
-            for e in relevant_events:
-                weight = 3 if any(k in e['tags'] for k in ('ransomware', 'alert', 'exfiltration')) else 1
-                weighted.extend([e] * weight)
-
-        # Si alerta alta/critica, reforzar eventos detectores
-        if alert >= 2:
-            for e in relevant_events:
-                if any(w in e['tags'] for w in ('alert', 'detect', 'ransomware', 'compromet')):
-                    weighted.extend([e] * 3)
-
-        # Si no hay pistas, favorecer eventos que las provean
-        if pistas == 0:
-            for e in relevant_events:
-                if any(w in e['tags'] for w in ('pistas', 'logs', 'reporta', 'exfiltration')):
-                    weighted.extend([e] * 2)
-
-        return random.choice(weighted) if weighted else random.choice(relevant_events)
-
-    def _choose_location(self, current_location: str, scenario: Dict[str, Any]) -> str:
-        """Elige la siguiente ubicación basándose en las conexiones del scenario."""
-        names = [loc['name'] for loc in scenario['locations']]
-        loc_map = {loc['name']: loc for loc in scenario['locations']}
-        if current_location not in loc_map:
-            return names[0]
-
-        connections = loc_map[current_location]['connections']
-        if not connections:
-            return random.choice(names)
-
-        if random.random() < 0.85:
-            return random.choice(connections)
-        else:
-            return random.choice(names)
-
-    # -------------------------
-    # Aplicación de efectos de eventos y opciones al state
-    # -------------------------
-    def _apply_event_effects(self, state: Dict[str, Any], event: Dict[str, Any]) -> Dict[str, Any]:
-        """Aplica efectos contenidos en un evento al state."""
-        new_state = state.copy()
-        effect = event.get('effect', {}) or {}
-        for key, delta in effect.items():
-            if key in new_state and isinstance(new_state[key], int):
-                new_state[key] = max(0, new_state[key] + int(delta))
-            else:
-                new_state[key] = delta
-        return new_state
-
-    def _apply_option_effects(self, state: Dict[str, Any], option: Dict[str, Any], success: bool) -> Dict[str, Any]:
-        """Aplica efectos de una opción elegida por el jugador."""
-        new_state = state.copy()
-        effects = option.get('effect_on_state', {}) or {}
-        if isinstance(effects, dict) and ('success' in effects or 'failure' in effects):
-            chosen_effect = effects['success'] if success else effects['failure']
-        else:
-            chosen_effect = effects
-
-        for key, delta in chosen_effect.items():
-            if key in new_state and isinstance(new_state[key], int):
-                new_state[key] = max(0, new_state[key] + int(delta))
-            else:
-                new_state[key] = chosen_effect[key]
-        return new_state
-
-    # -------------------------
-    # Descripciones realistas y conectadas al estado
-    # -------------------------
-    def _generate_description(self,
-                              scenario: Dict[str, Any],
-                              location: str,
-                              event: Dict[str, Any],
-                              stage_num: int,
-                              state: Dict[str, Any],
-                              goal: str,
-                              antagonist: str,
-                              key_item: str,
-                              show_objective: bool = False) -> str:
-        parts: List[str] = []
-        parts.append(f"Ubicación: {location}.")
-        parts.append(event['text'])
-
-        if state.get('alert_level', 0) >= 3:
-            parts.append("Alerta crítica: se ha detectado un incidente grave — actúa con prioridad.")
-        elif state.get('alert_level', 0) == 2:
-            parts.append("Alerta alta: actividad sospechosa persistente.")
-        elif state.get('alert_level', 0) == 1:
-            parts.append("Vigilancia aumentada: revisa tus acciones y reporta anomalías.")
-
-        pistas = state.get('pistas', 0)
-        if pistas > 0:
-            parts.append(f"Tienes {pistas} pista(s) relevantes que ayudan a {goal.split('.')[0].lower()}.")
-
-        # if show_objective:
-        #     parts.append(f"Objetivo: {goal}")
-
-        parts.append("¿Qué haces ahora?")
-        return " ".join(parts)
-
-    # -------------------------
-    # Opciones por personaje (con tags) - usadas por la selección contextual
-    # -------------------------
-    def _base_options_catalog(self) -> Dict[str, Dict[str, List[Dict[str, Any]]]]:
-        """Catálogo centralizado de opciones con tags que describen cuando son relevantes.
-        Cada opción tiene 'tags' lista (ej: ['phishing','credentials'])
-        """
-        return {
-            'usuario': {
-                'early': [
-                    {
-                        'text': 'Verificar remitente y no abrir el enlace; reportarlo a soporte.',
-                        'tags': ['phishing', 'correo', 'links'],
-                        'risk': 'bajo',
-                        'time': 1,
-                        'success': 90,
-                        'effect_on_state': {'success': {'pistas': +1}, 'failure': {'alert_level': +1}},
-                        'outcome_text': {'success': 'Reportaste el intento y el equipo bloqueó el remitente.', 'failure': 'El reporte tardó y algunos empleados cayeron en el engaño.'}
-                    },
-                    {
-                        'text': 'Hacer clic en el enlace para ver de qué se trata.',
-                        'tags': ['phishing', 'links'],
-                        'risk': 'alto',
-                        'time': 1,
-                        'success': 20,
-                        'effect_on_state': {'success': {'credentials_leaked': +1}, 'failure': {'alert_level': +2}},
-                        'outcome_text': {'success': 'Sincronizaste sin darte cuenta credenciales (mal).', 'failure': 'El enlace no funcionó, pero generó logs.'}
-                    },
-                    {
-                        'text': 'Activar autenticación en dos pasos en la cuenta afectada.',
-                        'tags': ['phishing', 'credentials', 'mfa'],
-                        'risk': 'bajo',
-                        'time': 2,
-                        'success': 85,
-                        'effect_on_state': {'success': {'alert_level': -1}, 'failure': {}},
-                        'outcome_text': {'success': 'MFA activada; reduce la probabilidad de compromiso.', 'failure': 'No pudiste completar la activación ahora.'}
-                    }
-                ],
-                'mid': [
-                    {
-                        'text': 'No conectar el USB y llevarlo a IT para análisis.',
-                        'tags': ['usb', 'physical'],
-                        'risk': 'bajo',
-                        'time': 1,
-                        'success': 95,
-                        'effect_on_state': {'success': {}, 'failure': {'alert_level': +1}},
-                        'outcome_text': {'success': 'IT analiza el USB y confirma que es malicioso.', 'failure': 'IT no está disponible y alguien más lo conectó.'}
-                    },
-                    {
-                        'text': 'Conectar el USB en tu equipo y abrir archivos.',
-                        'tags': ['usb', 'physical', 'malware'],
-                        'risk': 'alto',
-                        'time': 1,
-                        'success': 10,
-                        'effect_on_state': {'success': {'compromised_hosts': +1}, 'failure': {'alert_level': +2}},
-                        'outcome_text': {'success': 'El USB ejecutó un payload y comprometió tu equipo.', 'failure': 'El USB parecía inofensivo pero generó logs sospechosos.'}
-                    },
-                    {
-                        'text': 'Actualizar tu sistema y hacer backup local de archivos sensibles.',
-                        'tags': ['patch', 'backup'],
-                        'risk': 'bajo',
-                        'time': 2,
-                        'success': 90,
-                        'effect_on_state': {'success': {'pistas': +1}, 'failure': {}},
-                        'outcome_text': {'success': 'Actualizaste y creaste respaldo; estarás mejor protegido.', 'failure': 'La actualización falló por falta de permisos.'}
-                    }
-                ],
-                'late': [
-                    {
-                        'text': 'Cambiar contraseñas y revisar sesiones activas.',
-                        'tags': ['credentials', 'mfa'],
-                        'risk': 'bajo',
-                        'time': 1,
-                        'success': 85,
-                        'effect_on_state': {'success': {'credentials_leaked': -1}, 'failure': {}},
-                        'outcome_text': {'success': 'Contraseñas actualizadas y sesiones sospechosas cerradas.', 'failure': 'Algunos servicios no permitieron cambio inmediato.'}
-                    },
-                    {
-                        'text': 'Seguir trabajando como si nada (ignorar el riesgo).',
-                        'tags': ['ignore', 'risky'],
-                        'risk': 'alto',
-                        'time': 1,
-                        'success': 10,
-                        'effect_on_state': {'success': {}, 'failure': {'compromised_hosts': +1}},
-                        'outcome_text': {'success': 'Suerte estuvo de tu lado por ahora.', 'failure': 'Tu equipo fue comprometido por no actuar.'}
-                    }
-                ]
-            },
-            'hacker': {
-                'early': [
-                    {
-                        'text': 'Recolectar y correlacionar logs para identificar IOCs.',
-                        'tags': ['logs', 'exfiltration', 'detection'],
-                        'risk': 'bajo',
-                        'time': 2,
-                        'success': 85,
-                        'effect_on_state': {'success': {'pistas': +2}, 'failure': {'alert_level': +1}},
-                        'outcome_text': {'success': 'Encontraste indicadores de compromiso claros.', 'failure': 'Los logs estaban incompletos; necesitas más datos.'}
-                    },
-                    {
-                        'text': 'Aislar el host sospechoso de la red para análisis forense.',
-                        'tags': ['isolate', 'forensics'],
-                        'risk': 'medio',
-                        'time': 1,
-                        'success': 80,
-                        'effect_on_state': {'success': {'compromised_hosts': -1}, 'failure': {'alert_level': +1}},
-                        'outcome_text': {'success': 'El aislamiento evita más exfiltración.', 'failure': 'El aislamiento no fue completo y el atacante persistió.'}
-                    }
-                ],
-                'mid': [
-                    {
-                        'text': 'Aplicar mitigación: revocar credenciales comprometidas y rotar claves.',
-                        'tags': ['credentials', 'rotate'],
-                        'risk': 'medio',
-                        'time': 2,
-                        'success': 80,
-                        'effect_on_state': {'success': {'credentials_leaked': -1}, 'failure': {'alert_level': +1}},
-                        'outcome_text': {'success': 'Credenciales rotadas y acceso del atacante restringido.', 'failure': 'Algunas credenciales no se pudieron rotar a tiempo.'}
-                    },
-                    {
-                        'text': 'Restaurar desde backups verificados y validar integridad.',
-                        'tags': ['backup', 'restore'],
-                        'risk': 'bajo',
-                        'time': 3,
-                        'success': 85,
-                        'effect_on_state': {'success': {'compromised_hosts': -1}, 'failure': {'alert_level': +2}},
-                        'outcome_text': {'success': 'Restauración exitosa y sistemas volverán a la normalidad.', 'failure': 'Backups dañados o incompletos.'}
-                    }
-                ],
-                'late': [
-                    {
-                        'text': 'Implementar reglas IDS/IPS y bloqueos a nivel de firewall.',
-                        'tags': ['ids', 'firewall'],
-                        'risk': 'bajo',
-                        'time': 2,
-                        'success': 90,
-                        'effect_on_state': {'success': {'alert_level': -1}, 'failure': {'alert_level': +1}},
-                        'outcome_text': {'success': 'Se redujo el ruido y se contuvo la campaña.', 'failure': 'El atacante cambió tácticas y el bloqueo fue insuficiente.'}
-                    },
-                    {
-                        'text': 'Generar reporte técnico y coordinar comunicación con stakeholders.',
-                        'tags': ['report', 'comms'],
-                        'risk': 'bajo',
-                        'time': 1,
-                        'success': 75,
-                        'effect_on_state': {'success': {}, 'failure': {}},
-                        'outcome_text': {'success': 'La comunicación reduce impacto reputacional.', 'failure': 'La comunicación fue lenta y generó incertidumbre.'}
-                    }
-                ]
-            },
-            'cyberdelincuente': {
-                'early': [
-                    {
-                        'text': 'Enviar phishing dirigido (spear-phishing) a empleados clave.',
-                        'tags': ['phishing', 'spear'],
-                        'risk': 'medio',
-                        'time': 2,
-                        'success': 60,
-                        'effect_on_state': {'success': {'credentials_leaked': +1}, 'failure': {'alert_level': +1}},
-                        'outcome_text': {'success': 'Algunos empleados cayeron y entregaron credenciales.', 'failure': 'La campaña fue detectada por filtros anti-spam.'}
-                    },
-                    {
-                        'text': 'Dejar USB malicioso en un lugar visible esperando que alguien lo conecte.',
-                        'tags': ['usb', 'physical'],
-                        'risk': 'alto',
-                        'time': 3,
-                        'success': 45,
-                        'effect_on_state': {'success': {'compromised_hosts': +1}, 'failure': {'alert_level': +1}},
-                        'outcome_text': {'success': 'Un empleado conectó el USB y se logró acceso inicial.', 'failure': 'Nadie lo conectó y fue recogido por seguridad.'}
-                    }
-                ],
-                'mid': [
-                    {
-                        'text': 'Escalada lateral usando credenciales robadas para acceder a la base de datos.',
-                        'tags': ['lateral', 'exfiltration', 'database'],
-                        'risk': 'alto',
-                        'time': 3,
-                        'success': 65,
-                        'effect_on_state': {'success': {'pistas': +2, 'compromised_hosts': +1}, 'failure': {'alert_level': +2}},
-                        'outcome_text': {'success': 'Accediste a la base de datos y comenzaste la exfiltración.', 'failure': 'El control de accesos impidió la escalada.'}
-                    },
-                    {
-                        'text': 'Instalar backdoor persistente para acceso futuro.',
-                        'tags': ['backdoor', 'persistence'],
-                        'risk': 'alto',
-                        'time': 3,
-                        'success': 55,
-                        'effect_on_state': {'success': {'tiene_objeto_clave': True}, 'failure': {'alert_level': +2}},
-                        'outcome_text': {'success': 'Backdoor instalado; mantienes acceso.', 'failure': 'El backdoor fue detectado y limpiado.'}
-                    }
-                ],
-                'late': [
-                    {
-                        'text': 'Exfiltrar datos y cifrar backups para pedir rescate.',
-                        'tags': ['exfiltration', 'ransomware', 'rescate'],
-                        'risk': 'alto',
-                        'time': 3,
-                        'success': 70,
-                        'effect_on_state': {'success': {'credentials_leaked': +2, 'compromised_hosts': +1}, 'failure': {'alert_level': +3}},
-                        'outcome_text': {'success': 'Datos exfiltrados y cifrados; la empresa sufre interrupciones.', 'failure': 'El intento fue detectado y frenado por IDS.'}
-                    },
-                    {
-                        'text': 'Borrar rastros y preparar rutas de salida seguras.',
-                        'tags': ['cleanup', 'logs'],
-                        'risk': 'medio',
-                        'time': 2,
-                        'success': 60,
-                        'effect_on_state': {'success': {}, 'failure': {'alert_level': +1}},
-                        'outcome_text': {'success': 'Limpiaste logs y redujiste evidencia.', 'failure': 'Dejaste huellas que más tarde permiten tu identificación.'}
-                    }
-                ]
-            }
-        }
-
-    # -------------------------
-    # Selección estricta de 3 opciones contextuales
-    # -------------------------
-    def _generate_options(self,
-                          character_type: str,
-                          stage: int,
-                          total_stages: int,
-                          scenario: Dict[str, Any],
-                          location: str,
-                          event: Dict[str, Any],
-                          state: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Devuelve exactamente 3 opciones contextuales relacionadas con el event.tags."""
-        # Determinar fase (early/mid/late)
-        fraction = stage / max(1, total_stages - 1) if total_stages > 1 else 0
-        if fraction < 0.33:
-            phase = 'early'
-        elif fraction < 0.66:
-            phase = 'mid'
-        else:
-            phase = 'late'
-
-        catalog = self._base_options_catalog()
-        phase_candidates = list(catalog.get(character_type, {}).get(phase, []))
-
-        # obtener tags del evento (si los hay)
-        event_tags = event.get('tags', []) if isinstance(event, dict) else []
-
-        # 1) Filtrar candidatos que explícitamente tengan al menos un tag en común
-        def tag_match(cand: Dict[str, Any]) -> bool:
-            ctags = cand.get('tags', [])
-            return any(t in ctags for t in event_tags) if ctags and event_tags else False
-
-        # Solo opciones con tags en común
-        filtered = [cand for cand in phase_candidates if tag_match(cand)]
-
-        # Si no hay suficientes, buscar en otras fases
-        if len(filtered) < 3:
-            other_phases = ['early', 'mid', 'late']
-            for p in other_phases:
-                if p == phase:
-                    continue
-                extras = list(catalog.get(character_type, {}).get(p, []))
-                for e in extras:
-                    if tag_match(e) and e not in filtered:
-                        filtered.append(e)
-                    if len(filtered) >= 3:
-                        break
-                if len(filtered) >= 3:
-                    break
-
-        # Si siguen faltando, crear opciones genéricas estrictamente relacionadas con el evento, usando variantes y evitando repeticiones
-        generic_variants = []
-        if event_tags:
-            if any(tag in event_tags for tag in ('usb', 'physical')):
-                generic_variants = [
-                    f'No manipular dispositivos externos y reportar a IT desde {location}.',
-                    f'Colocar el USB en una bolsa antiestática y avisar a seguridad en {location}.',
-                    f'Ignorar el dispositivo y advertir a los compañeros en {location}.',
-                ]
-            elif any(tag in event_tags for tag in ('phishing', 'links', 'correo')):
-                generic_variants = [
-                    f'No abrir enlaces del remitente y reportar desde {location}.',
-                    f'Bloquear al remitente y reenviar el correo a IT desde {location}.',
-                    f'Eliminar el correo y advertir a los compañeros en {location}.',
-                ]
-            elif any(tag in event_tags for tag in ('exfiltration', 'database', 'tráfico')):
-                generic_variants = [
-                    f'Correlacionar logs y alertar al SOC desde {location}.',
-                    f'Contactar al área de seguridad para revisión de logs en {location}.',
-                    f'Generar un informe de actividad sospechosa desde {location}.',
-                ]
-        if not generic_variants:
-            generic_variants = [
-                f'Reportar la anomalía desde {location} a IT.',
-                f'Contactar a soporte para revisión presencial en {location}.',
-                f'Ignorar la anomalía y continuar trabajando en {location}.',
-            ]
-        # Agregar variantes que no estén ya en filtered
-        texts_in_filtered = [o['text'] for o in filtered]
-        for variant in generic_variants:
-            if len(filtered) >= 3:
-                break
-            if variant not in texts_in_filtered:
-                generic = {
-                    'text': variant,
-                    'tags': event_tags if event_tags else ['report'],
-                    'risk': 'medio', 'time': 1, 'success': 80,
-                    'effect_on_state': {'success': {}, 'failure': {'alert_level': +1}},
-                    'outcome_text': {'success': 'Acción realizada y reportada.', 'failure': 'No hubo respuesta a tiempo.'}
-                }
-                filtered.append(generic)
-
-        # Final tweak: asegurar keys
-        for opt in filtered[:3]:
-            opt.setdefault('risk', 'medio')
-            opt.setdefault('time', 1)
-            opt.setdefault('success', 50)
-            opt.setdefault('effect_on_state', {})
-            opt.setdefault('outcome_text', {'success': 'Operación completada.', 'failure': 'Operación fallida.'})
-
-        return filtered[:3]
-
-    # -------------------------
-    # Métodos de control de etapas y resolución
-    # -------------------------
     def get_current_stage(self) -> Optional[Dict[str, Any]]:
+        """Obtiene la etapa actual de la historia."""
         if not self.current_story:
             return None
+            
         stages = self.current_story.get('stages', [])
         if 0 <= self.stage_index < len(stages):
             return stages[self.stage_index]
+            
         return None
 
     def is_story_complete(self) -> bool:
+        """Verifica si la historia ha terminado."""
         if not self.current_story:
             return True
+            
         return self.stage_index >= len(self.current_story.get('stages', []))
 
-    def resolve_option(self, current_state: Dict[str, Any], option: Dict[str, Any]) -> Dict[str, Any]:
-        """Resuelve una opción: aplica efectos y avanza etapa (por defecto)."""
+    def resolve_option(self, current_state: Dict[str, Any], 
+                      option: Dict[str, Any]) -> Dict[str, Any]:
+        """Resuelve la opción elegida por el jugador y avanza la historia."""
+        
+        # Determinar éxito basado en probabilidad
         chance = option.get('success', 50)
         roll = random.randint(1, 100)
         success = roll <= chance
-
-        # Aplica efectos
+        
+        # Obtener estado actual
         state = self.current_story.get('final_state', {}).copy() if self.current_story else current_state.copy()
+        
+        # Aplicar efectos de la opción
         new_state = self._apply_option_effects(state, option, success)
+        
+        # Actualizar estado final
         if self.current_story:
             self.current_story['final_state'] = new_state
-
-        # Actualizar snapshot de la etapa actual
+        
+        # Registrar resultado en la etapa
         if self.current_story and 0 <= self.stage_index < len(self.current_story['stages']):
             stage = self.current_story['stages'][self.stage_index]
             stage['state_snapshot'] = new_state.copy()
+            
             outcome_text = option.get('outcome_text', {})
-            stage_result_text = outcome_text.get('success' if success else 'failure', '') if isinstance(outcome_text, dict) else str(outcome_text)
-            stage.setdefault('results', []).append({'choice_text': option.get('text', ''), 'success': success, 'text': stage_result_text})
-
-        # Avanzar (por defecto avance siempre)
+            result_text = outcome_text.get('success' if success else 'failure', '')
+            
+            stage['results'].append({
+                'choice_text': option.get('text', ''),
+                'success': success,
+                'text': result_text
+            })
+        
+        # Avanzar a la siguiente etapa
         self.stage_index += 1
+        
+        # Determinar si la historia está completa
         story_complete = self.is_story_complete()
         next_stage = self.get_current_stage() if not story_complete else None
-
+        
+        # Construir respuesta
         outcome_text = option.get('outcome_text', {})
         text = outcome_text.get('success' if success else 'failure', '') if isinstance(outcome_text, dict) else str(outcome_text)
+        
+        return {
+            'success': success,
+            'new_state': new_state,
+            'result_text': text,
+            'roll': roll,
+            'chance': chance,
+            'story_complete': story_complete,
+            'next_stage': next_stage
+        }
 
-        return {'success': success, 'new_state': new_state, 'result_text': text, 'roll': roll, 'chance': chance, 'story_complete': story_complete, 'next_stage': next_stage}
+    def get_story_summary(self) -> Dict[str, Any]:
+        """Genera resumen de la historia completada."""
+        if not self.current_story:
+            return {}
+        
+        final_state = self.current_story.get('final_state', {})
+        stages = self.current_story.get('stages', [])
+        
+        # Calcular estadísticas
+        total_choices = sum(len(stage.get('results', [])) for stage in stages)
+        successful_choices = sum(
+            1 for stage in stages 
+            for result in stage.get('results', []) 
+            if result.get('success', False)
+        )
+        
+        success_rate = (successful_choices / total_choices * 100) if total_choices > 0 else 0
+        
+        # Determinar desenlace
+        alert = final_state.get('alert_level', 0)
+        pistas = final_state.get('pistas', 0)
+        compromised = final_state.get('compromised_hosts', 0)
+        
+        if alert >= 3:
+            outcome = 'CRÍTICO: Incidente de seguridad mayor'
+        elif alert >= 2:
+            outcome = 'ALTO RIESGO: Situación controlada pero con daños'
+        elif alert == 1:
+            outcome = 'MODERADO: Amenazas detectadas y mitigadas'
+        else:
+            outcome = 'EXITOSO: Seguridad mantenida efectivamente'
+        
+        return {
+            'character': self.current_story.get('character', ''),
+            'objective': self.current_story.get('objective', ''),
+            'stages_completed': len(stages),
+            'total_choices': total_choices,
+            'successful_choices': successful_choices,
+            'success_rate': round(success_rate, 1),
+            'final_alert_level': alert,
+            'pistas_collected': pistas,
+            'compromised_hosts': compromised,
+            'outcome': outcome,
+            'final_state': final_state
+        }

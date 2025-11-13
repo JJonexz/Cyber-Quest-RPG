@@ -7,14 +7,16 @@
   },
   "Jugador_usuario": {
     "accessories": [],
-    "timestamp": 1763001084.2846382
+    "timestamp": 1763006452.7196891
   },
   "Jugador_cyberdelincuente": {
-    "accessories": [],
-    "timestamp": 1763001235.3129814
+    "accessories": [
+      "virus"
+    ],
+    "timestamp": 1763007470.0617313
   },
   "Jugador_hacker": {
     "accessories": [],
-    "timestamp": 1763001219.3961587
+    "timestamp": 1763007343.1681297
   }
 }
